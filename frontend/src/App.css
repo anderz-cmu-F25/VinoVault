@@ -1,0 +1,140 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f7f4ef;
+  color: #2d2320;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fffdf9;
+  border-bottom: 1px solid #eadfd7;
+  padding: 1rem 1.5rem;
+}
+
+.brand-block h1,
+.intro-card h2,
+.feature-header h2,
+.panel h3,
+.panel h4 {
+  margin: 0;
+}
+
+.brand-block p,
+.intro-card p,
+.feature-header p,
+.panel p,
+li {
+  line-height: 1.55;
+}
+
+.tab-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.nav-tab {
+  border: 1px solid #d8c6ba;
+  background: #fff;
+  color: #4a3832;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+
+.nav-tab.active {
+  background: #5c2f21;
+  color: #fff;
+  border-color: #5c2f21;
+}
+
+.content-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.intro-card,
+.feature-shell,
+.panel,
+.status-card {
+  background: #fff;
+  border: 1px solid #eadfd7;
+  border-radius: 18px;
+}
+
+.intro-card,
+.panel {
+  padding: 1.25rem;
+}
+
+.feature-shell {
+  padding: 1.25rem;
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.status-card {
+  min-width: 210px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8a6b61;
+}
+
+.owner-hint {
+  margin-top: 0.35rem;
+  color: #6a544d;
+}
+
+ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-header {
+    flex-direction: column;
+  }
+}
