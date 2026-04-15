@@ -179,9 +179,3 @@ npm run dev
 ## 👥 Team
 
 **Team SX-8**
-
----
-
-## 📄 License
-
-This project is for academic purposes (CMU Software Engineering Methods course).
