@@ -97,6 +97,7 @@ All data access is handled through a **Database Connector** to maintain separati
 - **UI Framework**: Tailwind CSS, Radix UI, Material-UI, shadcn/ui
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB Atlas
+- **Auth**: Clerk (Email/Password + Google OAuth)
 - **Real-time**: Socket.IO
 - **API Design**: RESTful APIs + Swagger
 - **Tooling**:
@@ -139,8 +140,9 @@ All data access is handled through a **Database Connector** to maintain separati
 ### Prerequisites
 
 - Node.js (recommended ≥ 18)
-- npm or yarn
-- MongoDB Atlas account (or local MongoDB)
+- npm
+- MongoDB Atlas account
+- Clerk account
 
 ### Installation
 
@@ -155,15 +157,33 @@ cd ../server
 npm install
 ```
 
+### Environment Variables
+
+**client/.env**
+```
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+```
+
+**server/.env**
+```
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/vinovault?retryWrites=true&w=majority
+PORT=3000
+```
+
 ### Running the App
 
 ```bash
+# Terminal 1 — Backend
 cd server
 npm run dev
 
-cd ../client
+# Terminal 2 — Frontend
+cd client
 npm run dev
 ```
+
+Frontend: `http://localhost:5173`
+Backend: `http://localhost:3000`
 
 ---
 
