@@ -1,7 +1,9 @@
-import { Bell, User } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
+import { useAuth } from "@clerk/clerk-react";
 import { NotificationPanel } from "./NotificationPanel";
+import { UserDropdown } from "./UserDropdown";
 
 export function NavigationBar() {
   const navLinks = [
@@ -12,6 +14,8 @@ export function NavigationBar() {
   ];
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isSignedIn } = useAuth();
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -30,25 +34,28 @@ export function NavigationBar() {
           <div className="hidden md:flex items-center space-x-10">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
+              const isGrayedOut = !isSignedIn && (link.name === "Discover" || link.name === "Cellar" || link.name === "Profile");
+
               return (
                 <Link
                   key={link.name}
                   to={link.path}
                   className="text-sm transition-all"
-                  style={{ 
+                  style={{
                     fontFamily: "'DM Sans', sans-serif",
-                    color: isActive ? '#722F37' : '#5A5A5A',
+                    color: isGrayedOut ? '#C0C0C0' : (isActive ? '#722F37' : '#5A5A5A'),
                     fontWeight: isActive ? 600 : 400,
-                    cursor: 'pointer',
-                    textDecoration: 'none'
+                    cursor: isGrayedOut ? 'default' : 'pointer',
+                    textDecoration: 'none',
+                    pointerEvents: isGrayedOut ? 'none' : 'auto'
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) {
+                    if (!isActive && !isGrayedOut) {
                       e.currentTarget.style.color = '#722F37';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isActive) {
+                    if (!isActive && !isGrayedOut) {
                       e.currentTarget.style.color = '#5A5A5A';
                     }
                   }}
@@ -59,37 +66,59 @@ export function NavigationBar() {
             })}
           </div>
 
-          {/* Right Section - Bell and Avatar */}
+          {/* Right Section */}
           <div className="flex items-center space-x-5">
-            <div className="relative">
-              <button 
-                className="p-2 hover:bg-gray-50 rounded-full transition-colors relative"
-                aria-label="Notifications"
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                style={{ cursor: 'pointer' }}
+            {isSignedIn ? (
+              <>
+                <div className="relative">
+                  <button
+                    className="p-2 hover:bg-gray-50 rounded-full transition-colors relative"
+                    aria-label="Notifications"
+                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <Bell className="w-5 h-5" style={{ color: '#5A5A5A' }} />
+                    {/* Notification Badge */}
+                    <div
+                      className="absolute top-1 right-1 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: '#722F37' }}
+                    />
+                  </button>
+
+                  {/* Notification Panel */}
+                  <NotificationPanel
+                    isOpen={isNotificationOpen}
+                    onClose={() => setIsNotificationOpen(false)}
+                  />
+                </div>
+
+                {/* User Dropdown */}
+                <UserDropdown />
+              </>
+            ) : (
+              <button
+                className="transition-opacity"
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#722F37',
+                  cursor: 'pointer',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0
+                }}
+                onClick={() => navigate('/login')}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.7';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
               >
-                <Bell className="w-5 h-5" style={{ color: '#5A5A5A' }} />
-                {/* Notification Badge */}
-                <div 
-                  className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: '#722F37' }}
-                />
+                Sign in
               </button>
-              
-              {/* Notification Panel */}
-              <NotificationPanel
-                isOpen={isNotificationOpen}
-                onClose={() => setIsNotificationOpen(false)}
-              />
-            </div>
-            
-            <button
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
-              style={{ backgroundColor: '#722F37', cursor: 'pointer', border: 'none' }}
-              aria-label="User profile"
-            >
-              <User className="w-5 h-5" style={{ color: '#ffffff' }} />
-            </button>
+            )}
           </div>
         </div>
       </div>

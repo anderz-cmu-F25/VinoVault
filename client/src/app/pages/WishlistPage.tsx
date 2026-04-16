@@ -3,6 +3,8 @@ import { useState } from "react";
 import { WineCard } from "../components/WineCard";
 import { AddWineModal } from "../components/AddWineModal";
 import { EmptyWishlist } from "../components/EmptyWishlist";
+import { GatedWishlistState } from "../components/GatedWishlistState";
+import { useAuth } from "@clerk/clerk-react";
 
 // Mock wine wishlist data
 const wineWishlist = [
@@ -48,6 +50,8 @@ export function WishlistPage() {
     }, 60000);
   };
 
+  const { isSignedIn } = useAuth();
+
   return (
     <main className="max-w-5xl mx-auto px-8 py-16">
       {/* Header Section */}
@@ -76,7 +80,7 @@ export function WishlistPage() {
           </div>
           
           {/* Right Actions */}
-          <div className="flex flex-col items-end gap-2">
+          {isSignedIn && <div className="flex flex-col items-end gap-2">
             {/* Buttons Row */}
             <div className="flex items-center gap-3">
               {/* Refresh Button */}
@@ -173,26 +177,30 @@ export function WishlistPage() {
                 )}
               </div>
             </div>
-          </div>
+          </div>}
         </div>
       </div>
 
       {/* Wine Cards List */}
       <div className="space-y-4 mb-12">
-        {wineWishlist.length > 0 ? (
-          wineWishlist.map((wine) => (
-            <WineCard
-              key={wine.id}
-              name={wine.name}
-              region={wine.region}
-              marketPrice={wine.marketPrice}
-              targetPrice={wine.targetPrice}
-              status={wine.status}
-              imageUrl={wine.imageUrl}
-            />
-          ))
+        {isSignedIn ? (
+          wineWishlist.length > 0 ? (
+            wineWishlist.map((wine) => (
+              <WineCard
+                key={wine.id}
+                name={wine.name}
+                region={wine.region}
+                marketPrice={wine.marketPrice}
+                targetPrice={wine.targetPrice}
+                status={wine.status}
+                imageUrl={wine.imageUrl}
+              />
+            ))
+          ) : (
+            <EmptyWishlist onBrowseClick={() => console.log("Browse wines clicked")} />
+          )
         ) : (
-          <EmptyWishlist onBrowseClick={() => console.log("Browse wines clicked")} />
+          <GatedWishlistState />
         )}
       </div>
 
