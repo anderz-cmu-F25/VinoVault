@@ -94,6 +94,7 @@ All data access is handled through a **Database Connector** to maintain separati
 ## 🛠️ Tech Stack
 
 - **Frontend**: React (Vite), TypeScript
+- **UI Framework**: Tailwind CSS, Radix UI, Material-UI, shadcn/ui
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB Atlas
 - **Real-time**: Socket.IO
@@ -145,7 +146,7 @@ All data access is handled through a **Database Connector** to maintain separati
 
 ```bash
 git clone https://github.com/your-org/vinovault.git
-cd vinovault
+cd VinoVault
 
 cd client
 npm install
