@@ -8,6 +8,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, setActive, isLoaded } = useSignIn();
 
@@ -15,6 +16,7 @@ export function LoginPage() {
     e.preventDefault();
     if (!isLoaded) return;
     setError("");
+    setIsLoading(true);
     try {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
@@ -23,7 +25,9 @@ export function LoginPage() {
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
-      setError(clerkError.errors?.[0]?.message ?? "登录失败，请重试");
+      setError(clerkError.errors?.[0]?.message ?? "Sign in failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -188,8 +192,9 @@ export function LoginPage() {
           {/* Sign In Button */}
           <button
             type="submit"
+            disabled={isLoading}
             className="w-full mb-6 transition-all"
-            style={{ 
+            style={{
               height: '44px',
               borderRadius: '8px',
               backgroundColor: '#722F37',
@@ -197,17 +202,18 @@ export function LoginPage() {
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
-              cursor: 'pointer',
-              border: 'none'
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              border: 'none',
+              opacity: isLoading ? 0.7 : 1,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5e2529';
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#5e2529';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = '#722F37';
             }}
           >
-            Sign in
+            {isLoading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 

@@ -8,11 +8,12 @@ type PasswordStrength = "weak" | "medium" | "strong" | null;
 export function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signUp, setActive, isLoaded } = useSignUp();
 
@@ -60,14 +61,12 @@ export function SignupPage() {
       setError("Passwords do not match");
       return;
     }
-    const [firstName, ...rest] = fullName.trim().split(" ");
-    const lastName = rest.join(" ");
+    setIsLoading(true);
     try {
       const result = await signUp.create({
         emailAddress: email,
         password,
-        firstName,
-        lastName: lastName || undefined,
+        username,
       });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
@@ -75,7 +74,9 @@ export function SignupPage() {
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
-      setError(clerkError.errors?.[0]?.message ?? "注册失败，请重试");
+      setError(clerkError.errors?.[0]?.message ?? "Sign up failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -144,24 +145,24 @@ export function SignupPage() {
 
         {/* Signup Form */}
         <form onSubmit={handleSignUp}>
-          {/* Full Name Field */}
+          {/* Username Field */}
           <div className="mb-4">
-            <label 
-              htmlFor="fullName"
+            <label
+              htmlFor="username"
               className="block mb-2"
-              style={{ 
+              style={{
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '13px',
                 color: '#5A5A5A'
               }}
             >
-              Full name
+              Username
             </label>
             <input
-              id="fullName"
+              id="username"
               type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full transition-all"
               style={{ 
                 height: '44px',
@@ -379,11 +380,15 @@ export function SignupPage() {
             </p>
           )}
 
+          {/* Clerk CAPTCHA widget mount point (required for bot protection) */}
+          <div id="clerk-captcha" />
+
           {/* Create Account Button */}
           <button
             type="submit"
+            disabled={isLoading}
             className="w-full mb-6 transition-all"
-            style={{ 
+            style={{
               height: '44px',
               borderRadius: '8px',
               backgroundColor: '#722F37',
@@ -391,17 +396,18 @@ export function SignupPage() {
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
-              cursor: 'pointer',
-              border: 'none'
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              border: 'none',
+              opacity: isLoading ? 0.7 : 1,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5e2529';
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#5e2529';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = '#722F37';
             }}
           >
-            Create account
+            {isLoading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
