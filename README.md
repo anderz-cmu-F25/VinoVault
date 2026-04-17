@@ -157,7 +157,13 @@ npm install
 
 # Install frontend dependencies
 cd client && npm install
+
+# Run backend code
+cd VinoVault
+npm run dev
 ```
+
+
 
 ### Local Development Setup
 

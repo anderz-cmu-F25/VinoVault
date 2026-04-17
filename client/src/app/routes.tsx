@@ -7,6 +7,7 @@ import { CellarPage } from "./pages/CellarPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
+import { SocialPage } from "./pages/SocialPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
       {
         path: "profile",
         element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
+      },
+      {
+        path: "social",
+        element: <ProtectedRoute><SocialPage /></ProtectedRoute>
       }
     ]
   }

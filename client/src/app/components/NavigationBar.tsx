@@ -10,7 +10,8 @@ export function NavigationBar() {
     { name: "Discover", path: "/discover" },
     { name: "Wishlist", path: "/wishlist" },
     { name: "Cellar", path: "/cellar" },
-    { name: "Profile", path: "/profile" }
+    { name: "Profile", path: "/profile" },
+    { name: "Social", path: "/social" },
   ];
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const location = useLocation();

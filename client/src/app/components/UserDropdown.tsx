@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { User, Heart, Wine, Bell, Settings, LogOut } from "lucide-react";
+import { User, Heart, Wine, Bell, Settings, LogOut, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import { SignOutModal } from "./SignOutModal";
@@ -39,7 +39,8 @@ export function UserDropdown() {
     { label: "My Wishlist", icon: Heart, path: "/wishlist" },
     { label: "My Cellar", icon: Wine, path: "/cellar" },
     { label: "Notification Settings", icon: Bell, path: "/settings/notifications" },
-    { label: "Account Settings", icon: Settings, path: "/settings/account" }
+    { label: "Account Settings", icon: Settings, path: "/settings/account" },
+    { label: "Social", icon: MessageCircle, path: "/social" },
   ];
 
   const handleMenuItemClick = (path: string) => {
