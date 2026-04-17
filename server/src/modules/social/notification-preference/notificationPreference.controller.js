@@ -5,10 +5,10 @@ const {
 
 async function getNotificationPreference(req, res, next) {
   try {
-    const userId = req.query.userId;
+    const userId = req.auth.userId;
 
     if (!userId) {
-      return res.status(400).json({ message: "userId is required" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const preference = await getNotificationPreferenceForUser(userId);
@@ -23,10 +23,11 @@ async function getNotificationPreference(req, res, next) {
 
 async function updateNotificationPreference(req, res, next) {
   try {
-    const { userId, allowNotifications } = req.body;
+    const userId = req.auth.userId;
+    const { allowNotifications } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ message: "userId is required" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     if (typeof allowNotifications !== "boolean") {
