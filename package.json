@@ -13,7 +13,8 @@
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "mongoose": "^9.4.1",
-    "svix": "^1.67.0"
+    "svix": "^1.67.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
