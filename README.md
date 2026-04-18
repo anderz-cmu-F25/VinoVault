@@ -57,13 +57,13 @@ It unifies features like recommendations, reviews, inventory tracking, and socia
 VinoVault follows a **three-tier client-server architecture**:
 
 ```
-Web Client  <-->  Backend Server  <-->  Database
-                    |
-                    +--> External APIs (Price, Email)
+Web Client  <-->  Serverless API  <-->  Database
+                       |
+                       +--> External APIs (Price, Email)
 ```
 
 - **Frontend (Web App)**: Handles user interactions and UI rendering
-- **Backend (Application Server)**: Implements business logic and REST APIs
+- **Backend (Serverless Functions)**: Implements business logic and REST APIs
 - **Database**: Stores user data, wine metadata, and system records
 - **External Services**: Provide price data and email delivery
 
@@ -100,8 +100,11 @@ All data access is handled through a **Database Connector** to maintain separati
 ## 🛠️ Tech Stack
 
 - **Frontend**: React (Vite), TypeScript
-- **Backend**: Node.js, Express.js
+- **UI Framework**: Tailwind CSS, Radix UI, Material-UI, shadcn/ui
+- **Backend**: Vercel Serverless Functions (Node.js, TypeScript)
 - **Database**: MongoDB Atlas
+- **Auth**: Clerk (Email/Password + Google OAuth)
+- **Deployment**: Vercel (frontend + API)
 - **Real-time**: Socket.IO
 - **API Design**: RESTful APIs + Swagger
 - **Tooling**:
@@ -144,31 +147,58 @@ All data access is handled through a **Database Connector** to maintain separati
 ### Prerequisites
 
 - Node.js (recommended ≥ 18)
-- npm or yarn
-- MongoDB Atlas account (or local MongoDB)
+- npm
+- [Vercel CLI](https://vercel.com/docs/cli): `npm i -g vercel`
+- MongoDB Atlas account
+- Clerk account
 
 ### Installation
 
 ```bash
 git clone https://github.com/your-org/vinovault.git
-cd vinovault
+cd VinoVault
 
-cd client
+# Install root dependencies (api/)
 npm install
 
-cd ../server
-npm install
+# Install frontend dependencies
+cd client && npm install
+
+# Run backend code
+cd VinoVault
+npm run dev
 ```
 
-### Running the App
+
+
+### Local Development Setup
 
 ```bash
-cd server
-npm run dev
+# 1. Copy the environment variable template and fill in the actual values
+cp .env.example .env.local
 
-cd ../client
-npm run dev
+# 2. Start the dev server (frontend + API functions)
+vercel dev
 ```
+
+> Get the actual values for `.env.local` from a teammate — never commit them to the repo.
+
+### Deploy
+
+```bash
+vercel --prod
+```
+
+---
+
+## 🔗 Clerk Webhook Setup
+
+After deploying, register the webhook in [Clerk Dashboard](https://dashboard.clerk.com) → Webhooks → Add Endpoint:
+
+- **URL**: `https://your-domain.vercel.app/api/webhooks/clerk`
+- **Events**: `user.created`, `user.updated`, `user.deleted`
+
+Copy the signing secret and add it as `CLERK_WEBHOOK_SECRET` in your Vercel environment variables.
 
 ---
 
