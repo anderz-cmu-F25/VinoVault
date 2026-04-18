@@ -27,6 +27,13 @@ async function findOrCreateByUsers(user1Id, user2Id) {
   return friendship;
 }
 
+async function findAllByUser(userId) {
+  return FriendshipModel.find({
+    $or: [{ userAId: userId }, { userBId: userId }],
+    status: { $ne: "NONE" },
+  });
+}
+
 async function save(friendship) {
   return friendship.save();
 }
@@ -35,5 +42,6 @@ module.exports = {
   normalizePair,
   findByUsers,
   findOrCreateByUsers,
+  findAllByUser,
   save,
 };

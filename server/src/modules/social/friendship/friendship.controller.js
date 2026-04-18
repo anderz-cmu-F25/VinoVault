@@ -6,6 +6,7 @@ const {
   acceptFriendRequest,
   blockUser,
   unblockUser,
+  listFriendships,
 } = require("./friendship.service");
 
 async function getRelationship(req, res, next) {
@@ -151,6 +152,20 @@ async function unblockFriendship(req, res, next) {
   }
 }
 
+async function getFriends(req, res, next) {
+  try {
+    const currentUserId = req.auth.userId;
+    if (!currentUserId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const data = await listFriendships(currentUserId);
+    return res.status(200).json({ data });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getRelationship,
   sendRequest,
@@ -158,4 +173,5 @@ module.exports = {
   acceptRequest,
   blockFriendship,
   unblockFriendship,
+  getFriends,
 };

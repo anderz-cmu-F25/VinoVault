@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useSignUp } from "@clerk/clerk-react";
 
 type PasswordStrength = "weak" | "medium" | "strong" | null;

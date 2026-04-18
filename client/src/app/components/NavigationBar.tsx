@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { NotificationPanel } from "./NotificationPanel";
 import { UserDropdown } from "./UserDropdown";

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { User, Heart, Wine, Bell, Settings, LogOut, MessageCircle } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import { SignOutModal } from "./SignOutModal";
 

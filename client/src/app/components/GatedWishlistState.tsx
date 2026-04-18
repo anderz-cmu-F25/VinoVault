@@ -1,5 +1,5 @@
 import { Lock } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 export function GatedWishlistState() {
   const navigate = useNavigate();

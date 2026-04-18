@@ -1,6 +1,7 @@
 // src/modules/social/friendship/friendship.service.js
 const {
   findOrCreateByUsers,
+  findAllByUser,
   save,
 } = require("./friendship.repository");
 const { resolveUserViewState } = require("./friendship.states");
@@ -98,6 +99,18 @@ async function unblockUser(currentUserId, targetUserId) {
   };
 }
 
+async function listFriendships(currentUserId) {
+  const friendships = await findAllByUser(currentUserId);
+  return friendships.map((f) => ({
+    userAId: f.userAId,
+    userBId: f.userBId,
+    status: f.status,
+    requestedBy: f.requestedBy,
+    blockedBy: f.blockedBy,
+    relationshipState: mapRelationshipState(f, currentUserId),
+  }));
+}
+
 module.exports = {
   getFriendshipState,
   sendFriendRequest,
@@ -105,4 +118,5 @@ module.exports = {
   acceptFriendRequest,
   blockUser,
   unblockUser,
+  listFriendships,
 };

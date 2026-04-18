@@ -10,6 +10,7 @@ const {
   acceptRequest,
   blockFriendship,
   unblockFriendship,
+  getFriends,
 } = require("./friendship/friendship.controller");
 const { authMiddleware } = require("../../common/middleware/auth.middleware");
 const { getChatHistory } = require("./chat/chat.controller");
@@ -34,6 +35,7 @@ router.patch(
   updateNotificationPreference
 );
 
+router.get("/friends", authMiddleware, getFriends);
 router.get("/relationships/:friendId", authMiddleware, getRelationship);
 router.post(
   "/relationships/:friendId/send-request",

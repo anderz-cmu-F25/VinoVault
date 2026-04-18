@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Outlet } from "react-router-dom";
 import { NavigationBar } from "../components/NavigationBar";
 
 export function RootLayout() {

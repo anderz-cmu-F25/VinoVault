@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth, AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import { RootLayout } from "./layouts/RootLayout";
 import { WishlistPage } from "./pages/WishlistPage";
@@ -8,6 +8,7 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { SocialPage } from "./pages/SocialPage";
+import { ChatRoomPage } from "./pages/ChatRoomPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
       {
         path: "social",
         element: <ProtectedRoute><SocialPage /></ProtectedRoute>
+      },
+      {
+        path: "social/chat/:friendId",
+        element: <ProtectedRoute><ChatRoomPage /></ProtectedRoute>
       }
     ]
   }
