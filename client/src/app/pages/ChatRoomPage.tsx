@@ -11,8 +11,8 @@ type ChatMessage = {
   createdAt?: string;
 };
 
-const API_BASE = "http://localhost:3000";
-const SOCKET_BASE = "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+const SOCKET_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 
 export function ChatRoomPage() {
   const { friendId } = useParams();
