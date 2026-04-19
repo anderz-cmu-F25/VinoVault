@@ -84,7 +84,7 @@ export function SignupPage() {
     if (!isLoaded) return;
     await signUp.authenticateWithRedirect({
       strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
+      redirectUrl: `${window.location.origin}/sso-callback`,
       redirectUrlComplete: "/wishlist",
     });
   };

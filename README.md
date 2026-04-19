@@ -148,9 +148,9 @@ All data access is handled through a **Database Connector** to maintain separati
 
 - Node.js (recommended ≥ 18)
 - npm
-- [Vercel CLI](https://vercel.com/docs/cli): `npm i -g vercel`
 - MongoDB Atlas account
 - Clerk account
+- ScraperAPI account (for wine data)
 
 ### Installation
 
@@ -158,18 +158,12 @@ All data access is handled through a **Database Connector** to maintain separati
 git clone https://github.com/your-org/vinovault.git
 cd VinoVault
 
-# Install root dependencies (api/)
+# Install root dependencies (api/ + dev tools)
 npm install
 
 # Install frontend dependencies
-cd client && npm install
-
-# Run backend code
-cd VinoVault
-npm run dev
+cd client && npm install && cd ..
 ```
-
-
 
 ### Local Development Setup
 
@@ -177,9 +171,15 @@ npm run dev
 # 1. Copy the environment variable template and fill in the actual values
 cp .env.example .env.local
 
-# 2. Start the dev server (frontend + API functions)
-vercel dev
+# 2. Start frontend + API together (from project root)
+npm run dev
 ```
+
+This starts two services concurrently:
+- **API server** → `http://localhost:3001` (Vercel serverless handlers via tsx)
+- **Frontend** → `http://localhost:5173` (Vite, with `/api` proxied to 3001)
+
+Open **`http://localhost:5173`** in your browser.
 
 > Get the actual values for `.env.local` from a teammate — never commit them to the repo.
 
@@ -188,6 +188,22 @@ vercel dev
 ```bash
 vercel --prod
 ```
+
+---
+
+## 🍷 Wine Data Pipeline
+
+Wine catalog data is scraped from wine.com and seeded into MongoDB.
+
+```bash
+# 1. Scrape → scripts/wine_data.json
+npm run scrape
+
+# 2. Import into MongoDB
+npm run seed
+```
+
+Requires `SCRAPERAPI_KEY` in `.env.local`. `wine_data.json` is gitignored.
 
 ---
 

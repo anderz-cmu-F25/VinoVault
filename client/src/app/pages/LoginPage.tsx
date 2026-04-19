@@ -35,7 +35,7 @@ export function LoginPage() {
     if (!isLoaded) return;
     await signIn.authenticateWithRedirect({
       strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
+      redirectUrl: `${window.location.origin}/sso-callback`,
       redirectUrlComplete: "/wishlist",
     });
   };

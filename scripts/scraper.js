@@ -1,57 +1,44 @@
 import * as cheerio from 'cheerio';
 import fs from 'fs/promises';
-import { gotScraping } from 'got-scraping';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import dotenv from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Load env from root .env.local
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
-// Set WINE_COM_COOKIE in .env.local (copy from browser DevTools -> any wine.com request -> cookie header).
-// Cookies expire after a few hours — refresh before each scrape run.
-const MY_USER_AGENT =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36';
-const MY_COOKIE = process.env.WINE_COM_COOKIE;
+const SCRAPERAPI_KEY = process.env.SCRAPERAPI_KEY;
 
 // Set WINE_COM_BASE_URL in .env.local to scrape a different category. Defaults to category 7155.
 const BASE_URL = process.env.WINE_COM_BASE_URL || 'https://www.wine.com/list/wine/7155';
 
-// Reject cookies containing non-ASCII characters (caused by IME converting digits to full-width).
-function validateCookie(cookie) {
-  // eslint-disable-next-line no-control-regex
-  if (/[^\x00-\x7F]/.test(cookie)) {
-    console.error('Error: WINE_COM_COOKIE contains non-ASCII characters (likely full-width digits from IME).');
-    console.error('Switch to English input, re-copy the cookie from the browser, and update .env.local.');
-    process.exit(1);
-  }
-}
-
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function scraperApiUrl(targetUrl) {
+  return `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(targetUrl)}`;
+}
+
 async function scrapeWinePage(pageNumber) {
-  const url = pageNumber === 1 ? BASE_URL : `${BASE_URL}/${pageNumber}`;
-  console.log(`[+] Fetching page ${pageNumber}: ${url}...`);
+  const targetUrl = pageNumber === 1 ? BASE_URL : `${BASE_URL}/${pageNumber}`;
+  console.log(`[+] Fetching page ${pageNumber}: ${targetUrl}...`);
 
   try {
-    const response = await gotScraping({
-      url,
-      headers: {
-        'user-agent': MY_USER_AGENT,
-        accept:
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'accept-language': 'en-US,en;q=0.9',
-        cookie: MY_COOKIE,
-      },
+    const response = await fetch(scraperApiUrl(targetUrl), {
+      signal: AbortSignal.timeout(60000), // 60s timeout
     });
 
-    const $ = cheerio.load(response.body);
+    if (!response.ok) {
+      console.error(`[-] Page ${pageNumber}: HTTP ${response.status}`);
+      return [];
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
 
     const pageTitle = $('title').text();
     if (pageTitle.includes('Just a moment') || pageTitle.includes('Access Denied')) {
-      console.error(`[-] Page ${pageNumber} blocked by WAF. Cookie may be expired — update .env.local.`);
+      console.error(`[-] Page ${pageNumber} blocked by WAF.`);
       return [];
     }
 
@@ -102,18 +89,17 @@ async function scrapeWinePage(pageNumber) {
 }
 
 async function runScraper() {
-  console.log('Starting scrape (cookie injection mode)...\n');
+  console.log('Starting scrape (ScraperAPI mode)...\n');
 
-  if (!MY_COOKIE) {
-    console.error('Error: WINE_COM_COOKIE is not set. Add it to .env.local:');
-    console.error('  WINE_COM_COOKIE="visitor_id=xxx; datadome=xxx; ..."');
+  if (!SCRAPERAPI_KEY) {
+    console.error('Error: SCRAPERAPI_KEY is not set. Add it to .env.local:');
+    console.error('  SCRAPERAPI_KEY=your_api_key_here');
     process.exit(1);
   }
-  validateCookie(MY_COOKIE);
 
   let allWines = [];
   const START_PAGE = 1;
-  const END_PAGE = 50; // 25 wines/page — stops automatically on empty page
+  const END_PAGE = 8;
 
   for (let i = START_PAGE; i <= END_PAGE; i++) {
     const wines = await scrapeWinePage(i);
@@ -126,7 +112,7 @@ async function runScraper() {
     allWines = allWines.concat(wines);
     console.log(`[v] Parsed ${wines.length} wines, total so far: ${allWines.length}`);
 
-    const delay = Math.floor(Math.random() * 2000) + 2000;
+    const delay = Math.floor(Math.random() * 1000) + 500;
     console.log(`[zzz] Sleeping ${delay}ms...\n`);
     await sleep(delay);
   }

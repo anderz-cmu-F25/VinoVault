@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-// In serverless environments each function invocation may reuse an existing
-// Node.js process. Caching the connection on `global` avoids reconnecting on
-// every request.
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -20,10 +17,16 @@ export async function connectDB() {
   if (cache.conn) return cache.conn;
 
   const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error("MONGODB_URI is not defined");
+  if (!uri) throw new Error("Missing required environment variable: MONGODB_URI");
 
   if (!cache.promise) {
-    cache.promise = mongoose.connect(uri).then((m) => m);
+    cache.promise = mongoose
+      .connect(uri, { serverSelectionTimeoutMS: 10000 })
+      .then((m) => m)
+      .catch((err) => {
+        cache.promise = null; // allow retry on next request
+        throw err;
+      });
   }
 
   cache.conn = await cache.promise;

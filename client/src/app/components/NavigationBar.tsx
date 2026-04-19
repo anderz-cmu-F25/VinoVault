@@ -1,9 +1,20 @@
 import { Bell } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { NotificationPanel } from "./NotificationPanel";
 import { UserDropdown } from "./UserDropdown";
+
+export interface ApiNotification {
+  _id: string;
+  wineId: string;
+  wineName: string;
+  previousPrice: number | null;
+  currentPrice: number;
+  targetPrice: number;
+  isRead: boolean;
+  createdAt: string;
+}
 
 export function NavigationBar() {
   const navLinks = [
@@ -13,10 +24,64 @@ export function NavigationBar() {
     { name: "Profile", path: "/profile" },
     { name: "Social", path: "/social" },
   ];
+
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, getToken } = useAuth();
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const fetchNotifications = useCallback(async () => {
+    if (!isSignedIn) return;
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/notifications", {
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      setNotifications(json.data ?? []);
+    } catch {
+      // Non-critical — badge simply won't show
+    }
+  }, [isSignedIn, getToken]);
+
+  // Fetch on sign-in and whenever the panel closes (picks up new reads)
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkRead = async (id: string) => {
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+    );
+    try {
+      const token = await getToken();
+      await fetch(`/api/notifications?id=${id}`, {
+        method: "PATCH",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+    } catch {
+      // Revert on failure
+      await fetchNotifications();
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      const token = await getToken();
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+    } catch {
+      await fetchNotifications();
+    }
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -25,7 +90,10 @@ export function NavigationBar() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/wishlist" style={{ textDecoration: 'none' }}>
-              <h1 className="text-2xl font-serif" style={{ fontFamily: "'Playfair Display', serif", color: '#722F37' }}>
+              <h1
+                className="text-2xl font-serif"
+                style={{ fontFamily: "'Playfair Display', serif", color: '#722F37' }}
+              >
                 VinoVault
               </h1>
             </Link>
@@ -35,7 +103,9 @@ export function NavigationBar() {
           <div className="hidden md:flex items-center space-x-10">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
-              const isGrayedOut = !isSignedIn && (link.name === "Discover" || link.name === "Cellar" || link.name === "Profile");
+              const isGrayedOut =
+                !isSignedIn &&
+                (link.name === "Discover" || link.name === "Cellar" || link.name === "Profile");
 
               return (
                 <Link
@@ -44,21 +114,17 @@ export function NavigationBar() {
                   className="text-sm transition-all"
                   style={{
                     fontFamily: "'DM Sans', sans-serif",
-                    color: isGrayedOut ? '#C0C0C0' : (isActive ? '#722F37' : '#5A5A5A'),
+                    color: isGrayedOut ? '#C0C0C0' : isActive ? '#722F37' : '#5A5A5A',
                     fontWeight: isActive ? 600 : 400,
                     cursor: isGrayedOut ? 'default' : 'pointer',
                     textDecoration: 'none',
-                    pointerEvents: isGrayedOut ? 'none' : 'auto'
+                    pointerEvents: isGrayedOut ? 'none' : 'auto',
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive && !isGrayedOut) {
-                      e.currentTarget.style.color = '#722F37';
-                    }
+                    if (!isActive && !isGrayedOut) e.currentTarget.style.color = '#722F37';
                   }}
                   onMouseLeave={(e) => {
-                    if (!isActive && !isGrayedOut) {
-                      e.currentTarget.style.color = '#5A5A5A';
-                    }
+                    if (!isActive && !isGrayedOut) e.currentTarget.style.color = '#5A5A5A';
                   }}
                 >
                   {link.name}
@@ -79,21 +145,34 @@ export function NavigationBar() {
                     style={{ cursor: 'pointer' }}
                   >
                     <Bell className="w-5 h-5" style={{ color: '#5A5A5A' }} />
-                    {/* Notification Badge */}
-                    <div
-                      className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                      style={{ backgroundColor: '#722F37' }}
-                    />
+
+                    {/* Badge — only shown when there are unread notifications */}
+                    {unreadCount > 0 && (
+                      <div
+                        className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center px-1"
+                        style={{
+                          backgroundColor: '#722F37',
+                          color: '#ffffff',
+                          fontSize: '9px',
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontWeight: 700,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </div>
+                    )}
                   </button>
 
-                  {/* Notification Panel */}
                   <NotificationPanel
                     isOpen={isNotificationOpen}
                     onClose={() => setIsNotificationOpen(false)}
+                    notifications={notifications}
+                    onMarkRead={handleMarkRead}
+                    onMarkAllRead={handleMarkAllRead}
                   />
                 </div>
 
-                {/* User Dropdown */}
                 <UserDropdown />
               </>
             ) : (
@@ -107,15 +186,11 @@ export function NavigationBar() {
                   cursor: 'pointer',
                   background: 'none',
                   border: 'none',
-                  padding: 0
+                  padding: 0,
                 }}
                 onClick={() => navigate('/login')}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.7'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
               >
                 Sign in
               </button>
