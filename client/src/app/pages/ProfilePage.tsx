@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { User, ArrowLeft, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 
 export function ProfilePage() {
   const navigate = useNavigate();
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
 
   const [allowNotifications, setAllowNotifications] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -27,8 +30,10 @@ export function ProfilePage() {
         setLoading(true);
         setError("");
 
+        const token = await getToken();
         const response = await fetch(
-          `/api/social/notification-preferences?userId=${encodeURIComponent(user.id)}`
+          `${SERVER_URL}/api/social/notification-preference`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (!response.ok) {
@@ -58,16 +63,18 @@ export function ProfilePage() {
       setError("");
       setSuccessMessage("");
 
-      const response = await fetch("/api/social/notification-preferences", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          allowNotifications: nextValue,
-        }),
-      });
+      const token = await getToken();
+      const response = await fetch(
+        `${SERVER_URL}/api/social/notification-preference`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ allowNotifications: nextValue }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update notification preference.");
