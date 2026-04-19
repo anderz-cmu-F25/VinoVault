@@ -27,7 +27,8 @@ async function createEvent(req, res, next) {
 
 async function getEvents(req, res, next) {
   try {
-    const events = await getAllSocialEvents();
+    const currentUserId = req.auth.userId;
+    const events = await getAllSocialEvents(currentUserId);
 
     return res.status(200).json({
       data: events,

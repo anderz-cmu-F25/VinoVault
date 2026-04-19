@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { io, Socket } from "socket.io-client";
 
@@ -11,11 +11,12 @@ type ChatMessage = {
   createdAt?: string;
 };
 
-const API_BASE = "http://localhost:3000";
-const SOCKET_BASE = "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+const SOCKET_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 
 export function ChatRoomPage() {
   const { friendId } = useParams();
+  const navigate = useNavigate();
   const { user, isLoaded: isUserLoaded } = useUser();
   const { getToken } = useAuth();
 
@@ -185,15 +186,34 @@ export function ChatRoomPage() {
     <main className="max-w-4xl mx-auto px-6 py-10">
       <div className="rounded-[28px] border border-[#EAEAEA] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <h1
-            className="text-3xl"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              color: "#722F37",
-            }}
-          >
-            Chat Room
-          </h1>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/social")}
+              style={{
+                height: "38px",
+                borderRadius: "999px",
+                border: "1px solid #DDD6D0",
+                backgroundColor: "#FFFFFF",
+                color: "#722F37",
+                padding: "0 16px",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "14px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              ← Back
+            </button>
+            <h1
+              className="text-3xl"
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                color: "#722F37",
+              }}
+            >
+              Chat Room
+            </h1>
+          </div>
 
           <span
             className="text-sm"
