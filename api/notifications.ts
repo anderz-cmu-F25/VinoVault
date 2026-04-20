@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { connectDB } from "../lib/db";
 import { Notification } from "../lib/models/Notification";
-import { User } from "../lib/models/User";
 import { getClerkId } from "../lib/auth";
+import { findOrCreateUserFromClerk } from "../lib/user-sync";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL || "*");
@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const clerkId = await getClerkId(req);
     if (!clerkId) return res.status(401).json({ message: "Unauthorized" });
 
-    const user = await User.findOne({ clerkId });
+    const user = await findOrCreateUserFromClerk(clerkId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const { email } = user;

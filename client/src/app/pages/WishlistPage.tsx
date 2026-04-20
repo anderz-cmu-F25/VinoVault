@@ -54,6 +54,9 @@ export function WishlistPage() {
   };
 
   const handleRemove = async (id: string) => {
+    const confirmed = window.confirm("Remove this wine from your wishlist?");
+    if (!confirmed) return;
+
     // Optimistic update
     setWishlistItems((prev) => prev.filter((item) => item._id !== id));
     try {
@@ -103,7 +106,7 @@ export function WishlistPage() {
           </div>
 
           {/* Right Actions */}
-          {isSignedIn && (
+          {isSignedIn && wishlistItems.length > 0 && (
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-3">
                 {/* Refresh Button */}

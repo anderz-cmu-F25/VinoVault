@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import {
   Ban,
@@ -11,6 +11,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/social";
@@ -141,10 +142,10 @@ function formatEventDateTime(input?: string | Date) {
 export function SocialPage() {
   const navigate = useNavigate();
   const { getToken, isLoaded } = useAuth();
-  const { user } = useUser();
+  const { user: currentUser } = useCurrentUser();
 
-  const currentUserId = user?.id || "";
-  const currentUsername = user?.username || "";
+  const currentUserId = currentUser?.clerkId || "";
+  const currentUsername = currentUser?.username || "";
 
   const [friendSearch, setFriendSearch] = useState("");
   const [usernameSearch, setUsernameSearch] = useState("");

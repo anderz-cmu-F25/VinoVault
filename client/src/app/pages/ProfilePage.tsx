@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { User, ArrowLeft, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
+  const { user, isLoaded } = useCurrentUser();
 
   const [allowNotifications, setAllowNotifications] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -26,9 +28,15 @@ export function ProfilePage() {
       try {
         setLoading(true);
         setError("");
+        const token = await getToken();
 
         const response = await fetch(
-          `/api/social/notification-preferences?userId=${encodeURIComponent(user.id)}`
+          "/api/social/notification-preference",
+          {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
+          }
         );
 
         if (!response.ok) {
@@ -46,7 +54,7 @@ export function ProfilePage() {
     }
 
     fetchPreference();
-  }, [isLoaded, user]);
+  }, [getToken, isLoaded, user]);
 
   async function handleTogglePreference() {
     if (!user || saving) return;
@@ -57,14 +65,15 @@ export function ProfilePage() {
       setSaving(true);
       setError("");
       setSuccessMessage("");
+      const token = await getToken();
 
-      const response = await fetch("/api/social/notification-preferences", {
+      const response = await fetch("/api/social/notification-preference", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify({
-          userId: user.id,
           allowNotifications: nextValue,
         }),
       });
@@ -209,8 +218,7 @@ export function ProfilePage() {
                     backgroundColor: allowNotifications ? "#722F37" : "#E0E0E0",
                     color: allowNotifications ? "#ffffff" : "#5A5A5A",
                     border: "none",
-                    cursor:
-                      loading || saving || !user ? "not-allowed" : "pointer",
+                    cursor: loading || saving || !user ? "not-allowed" : "pointer",
                     fontFamily: "'DM Sans', sans-serif",
                     fontWeight: 500,
                     minWidth: "180px",
@@ -277,7 +285,7 @@ export function ProfilePage() {
                 fontSize: "13px",
               }}
             >
-              Testing with Clerk user id: <strong>{user.id}</strong>
+              Current DB user id: <strong>{user.clerkId}</strong>
             </div>
           )}
         </div>

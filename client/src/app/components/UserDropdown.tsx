@@ -1,21 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import { User, Heart, Wine, Bell, Settings, LogOut, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 import { SignOutModal } from "./SignOutModal";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 export function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, clerkUser } = useCurrentUser();
   const { signOut } = useClerk();
 
-  const userName = user?.fullName ?? user?.firstName ?? "User";
-  const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+  const userName = user?.username || clerkUser?.fullName || clerkUser?.firstName || "User";
+  const userEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || "";
   const userInitials =
-    ((user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "")).toUpperCase() || "U";
+    ((userName[0] ?? "") + (userName[1] ?? "")).toUpperCase() || "U";
 
   // Close dropdown when clicking outside
   useEffect(() => {

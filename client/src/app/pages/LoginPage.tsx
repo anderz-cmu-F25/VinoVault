@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSignIn } from "@clerk/clerk-react";
 
 export function LoginPage() {
@@ -33,11 +33,17 @@ export function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     if (!isLoaded) return;
-    await signIn.authenticateWithRedirect({
-      strategy: "oauth_google",
-      redirectUrl: `${window.location.origin}/sso-callback`,
-      redirectUrlComplete: "/wishlist",
-    });
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: "/wishlist",
+      });
+    } catch (err: unknown) {
+      console.error("Google SignIn Error:", err);
+      const clerkError = err as { errors?: { message: string }[] };
+      setError(clerkError.errors?.[0]?.message ?? "Google sign-in failed. Please try again.");
+    }
   };
 
   return (
@@ -189,6 +195,9 @@ export function LoginPage() {
             </p>
           )}
 
+          {/* Clerk CAPTCHA widget mount point (required for bot protection) */}
+          <div id="clerk-captcha" />
+
           {/* Sign In Button */}
           <button
             type="submit"
@@ -290,18 +299,14 @@ export function LoginPage() {
           }}
         >
           Don't have an account?{' '}
-          <a
-            href="/signup"
+          <Link
+            to="/signup"
             className="transition-colors"
             style={{ 
               color: '#722F37',
               textDecoration: 'none',
               cursor: 'pointer',
               fontWeight: 500
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/signup');
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.opacity = '0.7';
@@ -311,7 +316,7 @@ export function LoginPage() {
             }}
           >
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

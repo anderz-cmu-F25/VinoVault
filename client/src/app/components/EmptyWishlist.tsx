@@ -1,13 +1,10 @@
 import { Wine } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface EmptyWishlistProps {
   onAddClick: () => void;
 }
 
 export function EmptyWishlist({ onAddClick }: EmptyWishlistProps) {
-  const navigate = useNavigate();
-
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6">
       {/* Wine Glass Icon */}
@@ -29,7 +26,7 @@ export function EmptyWishlist({ onAddClick }: EmptyWishlistProps) {
           color: '#722F37'
         }}
       >
-        Your wishlist is empty
+        No wishlist
       </h2>
 
       {/* Subtext */}
@@ -41,27 +38,11 @@ export function EmptyWishlist({ onAddClick }: EmptyWishlistProps) {
           lineHeight: '1.6'
         }}
       >
-        Start tracking wines you love and we'll alert you when prices drop
+        Add a wine to start tracking prices.
       </p>
 
-      {/* CTA Buttons */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate('/discover')}
-          className="px-8 py-3 rounded-full transition-all border"
-          style={{
-            backgroundColor: 'transparent',
-            borderColor: '#722F37',
-            color: '#722F37',
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FDF6EE'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-        >
-          Browse Wines
-        </button>
+      {/* CTA Button */}
+      <div className="flex items-center">
         <button
           onClick={onAddClick}
           className="px-8 py-3 rounded-full transition-all hover:shadow-md"
