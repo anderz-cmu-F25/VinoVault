@@ -41,7 +41,7 @@ It unifies features like recommendations, reviews, inventory tracking, and socia
 ### 👥 Social Features
 
 - User profiles and friend connections
-- Private messaging (real-time chat)
+- Private messaging (real-time chat via WebSockets)
 - Organize tastings and events
 
 ### 🔔 Notifications
@@ -54,20 +54,23 @@ It unifies features like recommendations, reviews, inventory tracking, and socia
 
 ## 🏗️ Architecture Overview
 
-VinoVault follows a **three-tier client-server architecture**:
+VinoVault uses a **split deployment model**: the frontend is a static React SPA hosted on Vercel, and the backend is a persistent Express server hosted on Render. This split is required because the real-time chat feature uses Socket.IO (WebSockets), which cannot run in Vercel's serverless environment.
 
 ```
-Web Client  <-->  Backend Server  <-->  Database
-                    |
-                    +--> External APIs (Price, Email)
+Browser (Vercel)
+      │
+      ├── REST (HTTPS) ──────────────────► Express API (Render)
+      │                                         │
+      └── WebSocket (Socket.IO) ────────────────┤
+                                                │
+                                          MongoDB Atlas
+                                          Clerk (Auth)
 ```
 
-- **Frontend (Web App)**: Handles user interactions and UI rendering
-- **Backend (Application Server)**: Implements business logic and REST APIs
-- **Database**: Stores user data, wine metadata, and system records
-- **External Services**: Provide price data and email delivery
-
-The system also supports **real-time communication via WebSockets (Socket.IO)** for chat features.
+- **Frontend**: React + Vite SPA, deployed to Vercel
+- **Backend**: Express.js server with Socket.IO, deployed to Render
+- **Database**: MongoDB Atlas (cloud)
+- **Auth**: Clerk — frontend uses publishable key, backend verifies JWTs with secret key
 
 ---
 
@@ -78,12 +81,13 @@ The system also supports **real-time communication via WebSockets (Socket.IO)** 
 - Wine discovery and browsing
 - Reviews and social interactions
 - Inventory and wishlist management
+- Real-time chat (Socket.IO client)
 
 ### Backend Subsystems
 
 - **Wine Review System** – manages user-generated reviews
 - **Recommendation & Discovery Engine** – search and ranking logic
-- **Profile & Social System** – user relationships and chat metadata
+- **Profile & Social System** – user relationships, friend requests, chat
 - **Inventory & Reminder System** – cellar tracking + scheduled reminders
 - **Notification System** – centralized alerts and preferences
 
@@ -93,49 +97,50 @@ The system also supports **real-time communication via WebSockets (Socket.IO)** 
 - **GoPuff API** for wine metadata and pricing
 - **Email API** for notifications
 
-All data access is handled through a **Database Connector** to maintain separation of concerns.
-
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React (Vite), TypeScript
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB Atlas
-- **Real-time**: Socket.IO
-- **API Design**: RESTful APIs + Swagger
-- **Tooling**:
-  - Prettier (code formatting)
-  - GitHub (version control)
+| Layer | Technology |
+|---|---|
+| Frontend | React (Vite), TypeScript |
+| Styling | Tailwind CSS, Radix UI, shadcn/ui |
+| Backend | Node.js, Express.js |
+| Real-time | Socket.IO (WebSockets) |
+| Database | MongoDB Atlas (Mongoose) |
+| Auth | Clerk (Email/Password + Google OAuth) |
+| Frontend Deploy | Vercel |
+| Backend Deploy | Render |
+| API Design | RESTful JSON APIs |
+| Tooling | Prettier, GitHub |
 
 ---
 
 ## ⚙️ Key Design Decisions
 
+- **Split Deployment (Vercel + Render)**
+  - Vercel cannot run persistent processes, so Socket.IO lives on Render
+  - Frontend communicates with backend via `VITE_SERVER_URL` env var
+
+- **Clerk JWT Authentication**
+  - Frontend obtains a signed JWT from Clerk and sends it as `Authorization: Bearer <token>`
+  - Backend verifies it using `@clerk/express` — works cross-origin with no extra config
+
 - **Layered Architecture**
-
   - Separation of UI, business logic, and data layers
-  - Improves maintainability and scalability
+  - Each social sub-feature has its own controller / service / repository / model
+
 - **Centralized Notification System**
-
   - Avoids duplicated logic across features
-  - Supports user preferences (quiet hours, frequency limits)
-- **Asynchronous Processing**
-
-  - Background scheduler for reminders
-  - External API calls handled via connectors to avoid blocking
-- **Data Separation**
-
-  - Wine catalog (shared data) vs. user cellar (personal data)
-  - Reduces duplication and improves consistency
+  - Supports user preferences
 
 ---
 
 ## 🔌 API & Communication
 
-- **REST APIs (JSON over HTTP)** for client-server communication
-- **WebSocket (Socket.IO)** for real-time chat
-- **Connectors** isolate external dependencies (price APIs, email services)
+- **REST APIs (JSON over HTTP)** — all routes under `/api/social/`
+- **WebSocket (Socket.IO)** — real-time chat between friends
+- Auth header required on all protected endpoints: `Authorization: Bearer <clerk_jwt>`
 
 ---
 
@@ -143,32 +148,135 @@ All data access is handled through a **Database Connector** to maintain separati
 
 ### Prerequisites
 
-- Node.js (recommended ≥ 18)
-- npm or yarn
-- MongoDB Atlas account (or local MongoDB)
+- Node.js ≥ 18
+- npm
+- MongoDB Atlas cluster
+- Clerk account (for auth keys)
 
-### Installation
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/your-org/vinovault.git
-cd vinovault
+cd VinoVault
 
-cd client
+# Install root/server dependencies
 npm install
 
-cd ../server
-npm install
+# Install frontend dependencies
+cd client && npm install
 ```
 
-### Running the App
+### 2. Environment Variables
+
+**Backend** — create a `.env` file inside `server/`:
 
 ```bash
-cd server
-npm run dev
-
-cd ../client
-npm run dev
+cp .env.example server/.env
 ```
+
+Fill in these values in `server/.env`:
+
+| Variable | Description |
+|---|---|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `CLERK_SECRET_KEY` | From Clerk Dashboard → API Keys (`sk_test_...`) |
+| `CLERK_WEBHOOK_SECRET` | From Clerk Dashboard → Webhooks (`whsec_...`) |
+| `FRONTEND_URL` | `http://localhost:5173` for local dev |
+| `PORT` | `3000` (optional, defaults to 3000) |
+
+**Frontend** — create a `.env.local` file inside `client/`:
+
+```bash
+cp client/.env.example client/.env.local
+```
+
+Fill in these values in `client/.env.local`:
+
+| Variable | Description |
+|---|---|
+| `VITE_CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
+| `VITE_SERVER_URL` | `http://localhost:3000` for local dev |
+
+> Get the actual secret values from a teammate — never commit `.env` or `.env.local` to the repo.
+
+### 3. Run Locally (two terminals)
+
+**Terminal 1 — Backend:**
+
+```bash
+# From repo root
+npm run dev
+# Server starts at http://localhost:3000
+```
+
+**Terminal 2 — Frontend:**
+
+```bash
+cd client
+npm run dev
+# App opens at http://localhost:5173
+```
+
+---
+
+## 🚢 Production Deployment
+
+### Backend → Render
+
+1. Create a new **Web Service** on [render.com](https://render.com)
+2. Connect your GitHub repo
+3. Set the following in Render's dashboard:
+   - **Root directory**: *(leave empty — repo root)*
+   - **Build command**: `npm install`
+   - **Start command**: `node server/src/server.js`
+4. Add these **Environment Variables** in Render:
+
+| Variable | Value |
+|---|---|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `CLERK_SECRET_KEY` | `sk_live_...` from Clerk |
+| `CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk |
+| `FRONTEND_URL` | `https://vinovault-lac.vercel.app` |
+| `PORT` | `3000` |
+
+5. Your Render URL: **`https://vinovault.onrender.com`**
+
+### Frontend → Vercel
+
+1. Import your GitHub repo on [vercel.com](https://vercel.com)
+2. Set the following in Vercel project settings:
+   - **Root directory**: `client`
+   - **Build command**: `npm run build`
+   - **Output directory**: `dist`
+3. Add these **Environment Variables** in Vercel:
+
+| Variable | Value |
+|---|---|
+| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk |
+| `VITE_SERVER_URL` | `https://vinovault.onrender.com` |
+
+4. Deploy — Vercel auto-deploys on every push to `main`
+
+Your Vercel URL: **`https://vinovault-lac.vercel.app`**
+
+---
+
+## 🔗 Clerk Setup
+
+### Allowed Origins
+
+In [Clerk Dashboard](https://dashboard.clerk.com) → **Configure** → **Allowed origins**, add:
+- `http://localhost:5173` (local dev)
+- `https://vinovault-lac.vercel.app` (production)
+
+### Webhook (optional)
+
+If using Clerk webhooks, register the endpoint under **Webhooks → Add Endpoint**:
+
+- **URL**: `https://vinovault.onrender.com/api/webhooks/clerk`
+- **Events**: `user.created`, `user.updated`, `user.deleted`
+
+Copy the signing secret → add as `CLERK_WEBHOOK_SECRET` on Render.
 
 ---
 
