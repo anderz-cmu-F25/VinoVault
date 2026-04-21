@@ -4,6 +4,7 @@ export interface INotification extends Document {
   email: string;
   wineId: string;
   wineName: string;
+  wineUrl: string;
   previousPrice: number | null;
   currentPrice: number;
   targetPrice: number;
@@ -17,6 +18,7 @@ const NotificationSchema = new Schema<INotification>(
     email:         { type: String, required: true, index: true },
     wineId:        { type: String, required: true },
     wineName:      { type: String, required: true },
+    wineUrl:       { type: String, required: true },
     previousPrice: { type: Number, default: null },
     currentPrice:  { type: Number, required: true },
     targetPrice:   { type: Number, required: true },

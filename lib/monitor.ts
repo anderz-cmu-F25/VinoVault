@@ -78,6 +78,7 @@ export class NotificationObserver implements PriceDropObserver {
         email:         event.email,
         wineId:        event.wineId,
         wineName:      event.wineName,
+        wineUrl:       event.wineUrl,
         previousPrice: event.previousPrice,
         currentPrice:  event.currentPrice,
         targetPrice:   event.targetPrice,

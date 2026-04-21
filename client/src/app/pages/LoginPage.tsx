@@ -22,10 +22,21 @@ export function LoginPage() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         navigate("/discover");
+      } else {
+        setError("Sign in could not be completed. Please try again.");
       }
     } catch (err: unknown) {
-      const clerkError = err as { errors?: { message: string }[] };
-      setError(clerkError.errors?.[0]?.message ?? "Sign in failed. Please try again.");
+      const clerkError = err as { errors?: { code: string; message: string }[] };
+      const code = clerkError.errors?.[0]?.code;
+      if (code === "strategy_for_user_invalid") {
+        setError("This account uses Google Sign-In. Please use the 'Continue with Google' button below.");
+      } else if (code === "form_identifier_not_found") {
+        setError("No account found with this email. Please sign up first.");
+      } else if (code === "form_password_incorrect") {
+        setError("Incorrect password. Please try again.");
+      } else {
+        setError(clerkError.errors?.[0]?.message ?? "Sign in failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

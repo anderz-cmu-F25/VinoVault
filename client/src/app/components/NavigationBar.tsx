@@ -9,6 +9,7 @@ export interface ApiNotification {
   _id: string;
   wineId: string;
   wineName: string;
+  wineUrl?: string;
   previousPrice: number | null;
   currentPrice: number;
   targetPrice: number;

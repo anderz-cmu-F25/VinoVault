@@ -51,6 +51,13 @@ export function NotificationPanel({
       : `Your target: $${n.targetPrice.toFixed(2)} — Still watching`;
     const statusColor = targetMet ? "#2E7D32" : "#9A9A9A";
 
+    const handleClick = () => {
+      onMarkRead(n._id);
+      if (n.wineUrl) {
+        window.open(n.wineUrl, "_blank", "noopener,noreferrer");
+      }
+    };
+
     return (
       <div
         key={n._id}
@@ -60,7 +67,7 @@ export function NotificationPanel({
             ? (n.isRead ? '#F9F9F9' : '#F0F9F1')
             : (n.isRead ? '#ffffff' : '#F5FBF5'),
         }}
-        onClick={() => onMarkRead(n._id)}
+        onClick={handleClick}
         onMouseEnter={() => setHoveredId(n._id)}
         onMouseLeave={() => setHoveredId(null)}
       >
@@ -81,7 +88,7 @@ export function NotificationPanel({
               >
                 {n.wineName}
               </h4>
-              {hoveredId === n._id && (
+              {hoveredId === n._id && n.wineUrl && (
                 <span
                   style={{
                     fontFamily: "'DM Sans', sans-serif",
