@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { User, ArrowLeft, Bell } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { User, Bell } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 
 export function ProfilePage() {
-  const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user, isLoaded } = useCurrentUser();
 
@@ -96,24 +94,6 @@ export function ProfilePage() {
   return (
     <main className="max-w-5xl mx-auto px-8 py-16">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <button
-            className="flex items-center gap-2 px-5 py-3 rounded-full transition-all hover:shadow-md"
-            style={{
-              backgroundColor: "transparent",
-              color: "#722F37",
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 500,
-              cursor: "pointer",
-              border: "1px solid #722F37",
-            }}
-            onClick={() => navigate("/wishlist")}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Wishlist
-          </button>
-        </div>
-
         <div
           className="rounded-[28px] p-8"
           style={{

@@ -21,7 +21,7 @@ export function LoginPage() {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/wishlist");
+        navigate("/discover");
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
@@ -37,7 +37,7 @@ export function LoginPage() {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: `${window.location.origin}/sso-callback`,
-        redirectUrlComplete: "/wishlist",
+        redirectUrlComplete: "/discover",
       });
     } catch (err: unknown) {
       console.error("Google SignIn Error:", err);

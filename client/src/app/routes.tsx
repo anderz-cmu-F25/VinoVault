@@ -44,8 +44,8 @@ function ClerkProviderLayout() {
       routerReplace={buildClerkNavigator(true)}
       signInUrl="/login"
       signUpUrl="/signup"
-      signInFallbackRedirectUrl="/wishlist"
-      signUpFallbackRedirectUrl="/wishlist"
+      signInFallbackRedirectUrl="/discover"
+      signUpFallbackRedirectUrl="/discover"
     >
       <Outlet />
     </ClerkProvider>
@@ -62,7 +62,7 @@ function AuthRoute({
   const { isSignedIn, isLoaded } = useAuth();
   if (!isLoaded) return null;
   if (requireSignedIn && !isSignedIn) return <Navigate to="/login" replace />;
-  if (!requireSignedIn && isSignedIn) return <Navigate to="/wishlist" replace />;
+  if (!requireSignedIn && isSignedIn) return <Navigate to="/discover" replace />;
   return <>{children}</>;
 }
 
@@ -101,7 +101,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to="/wishlist" replace />
+            element: <Navigate to="/discover" replace />
           },
           {
             path: "wishlist",

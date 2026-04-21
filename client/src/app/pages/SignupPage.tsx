@@ -50,7 +50,7 @@ export function SignupPage() {
 
       if (result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        navigate("/wishlist");
+        navigate("/discover");
         return;
       }
 
@@ -146,7 +146,7 @@ export function SignupPage() {
       });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/wishlist");
+        navigate("/discover");
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
@@ -162,7 +162,7 @@ export function SignupPage() {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: `${window.location.origin}/sso-callback`,
-        redirectUrlComplete: "/wishlist",
+        redirectUrlComplete: "/discover",
       });
     } catch (err: unknown) {
       console.error("Google SignUp Error:", err);
