@@ -38,7 +38,7 @@ class CellarEntryBuilder extends Builder {
   }
 
   setWineInfo(wineId, name, winery, type, region) {
-    this.entry.wineId = wineId;
+    if (wineId !== undefined) this.entry.wineId = wineId;
     if (name !== undefined) this.entry.wineName = name;
     if (winery !== undefined) this.entry.winery = winery;
     if (type !== undefined) this.entry.type = type;

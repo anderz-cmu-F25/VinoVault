@@ -27,9 +27,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AddCellarEntryModal } from "../../client/src/app/components/AddCellarEntryModal";
 
-// Mock Clerk
+// Mock Clerk — stable getToken reference
+const mockGetToken = vi.fn().mockResolvedValue("mock_token");
 vi.mock("@clerk/clerk-react", () => ({
-  useAuth: () => ({ getToken: vi.fn().mockResolvedValue("mock_token") }),
+  useAuth: () => ({ getToken: mockGetToken }),
 }));
 
 // Mock fetch globally
@@ -213,7 +214,7 @@ describe("AddCellarEntryModal — submit", () => {
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/inventory/"),
+        expect.stringContaining("/api/inventory"),
         expect.objectContaining({ method: "POST" })
       );
     });
@@ -251,40 +252,25 @@ describe("AddCellarEntryModal — submit", () => {
 // Wine search autocomplete
 // ─────────────────────────────────────────
 describe("AddCellarEntryModal — wine search", () => {
-  it("triggers fetch after typing 2+ characters in search", async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        data: [{ _id: "w1", wineName: "Margaux", winery: "Ch. Margaux", region: "Bordeaux" }],
-      }),
-    });
-
+  it("shows results from local catalog immediately on typing (no fetch needed)", async () => {
     const user = userEvent.setup();
     render(<AddCellarEntryModal {...BASE_PROPS} />);
     await user.type(screen.getByPlaceholderText(/search by name/i), "Ma");
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("wines/search?q=Ma"),
-        expect.any(Object)
-      );
-    });
+    // Results come from SAMPLE_WINES, no API call required
+    expect(screen.getByText("Château Margaux")).toBeInTheDocument();
+    // No fetch to the wines/search endpoint
+    expect(mockFetch).not.toHaveBeenCalledWith(
+      expect.stringContaining("wines/search"),
+      expect.any(Object)
+    );
   });
 
   it("shows search results in dropdown", async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        data: [{ _id: "w1", wineName: "Margaux", winery: "Ch. Margaux", region: "Bordeaux" }],
-      }),
-    });
-
     const user = userEvent.setup();
     render(<AddCellarEntryModal {...BASE_PROPS} />);
-    await user.type(screen.getByPlaceholderText(/search by name/i), "Ma");
+    await user.type(screen.getByPlaceholderText(/search by name/i), "Opus");
 
-    await waitFor(() => {
-      expect(screen.getByText("Margaux")).toBeInTheDocument();
-    });
+    expect(screen.getByText("Opus One")).toBeInTheDocument();
   });
 });

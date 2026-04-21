@@ -14,10 +14,11 @@ async function createEntry(data) {
 }
 
 async function updateEntry(entryId, userId, data) {
+  const { _id, __v, createdAt, updatedAt, ...fields } = data;
   return CellarEntryModel.findOneAndUpdate(
     { _id: entryId, userId },
-    data,
-    { new: true }
+    { $set: fields },
+    { returnDocument: "after" }
   );
 }
 

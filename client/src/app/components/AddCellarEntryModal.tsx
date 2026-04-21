@@ -1,17 +1,32 @@
 import { X, Search } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 
 interface WineResult {
-  _id: string;
+  id: number;
   wineName: string;
   winery?: string;
   type?: string;
   region?: string;
   vintage?: number;
 }
+
+const SAMPLE_WINES: WineResult[] = [
+  { id: 1, wineName: "Château Margaux", winery: "Château Margaux", type: "red", region: "Bordeaux, France", vintage: 2018 },
+  { id: 2, wineName: "Château Lafite Rothschild", winery: "Château Lafite Rothschild", type: "red", region: "Pauillac, Bordeaux", vintage: 2015 },
+  { id: 3, wineName: "Opus One", winery: "Opus One Winery", type: "red", region: "Napa Valley, California", vintage: 2019 },
+  { id: 4, wineName: "Penfolds Grange", winery: "Penfolds", type: "red", region: "South Australia", vintage: 2017 },
+  { id: 5, wineName: "Screaming Eagle Cabernet", winery: "Screaming Eagle", type: "red", region: "Napa Valley, California", vintage: 2019 },
+  { id: 6, wineName: "Ornellaia", winery: "Tenuta dell'Ornellaia", type: "red", region: "Bolgheri, Tuscany", vintage: 2018 },
+  { id: 7, wineName: "Barolo Riserva", winery: "Giacomo Conterno", type: "red", region: "Piedmont, Italy", vintage: 2016 },
+  { id: 8, wineName: "Cloudy Bay Sauvignon Blanc", winery: "Cloudy Bay", type: "white", region: "Marlborough, New Zealand", vintage: 2022 },
+  { id: 9, wineName: "Dom Pérignon", winery: "Moët & Chandon", type: "sparkling", region: "Champagne, France", vintage: 2013 },
+  { id: 10, wineName: "Caymus Cabernet Sauvignon", winery: "Caymus Vineyards", type: "red", region: "Napa Valley, California", vintage: 2021 },
+  { id: 11, wineName: "Pinot Noir Reserve", winery: "Domaine Drouhin", type: "red", region: "Burgundy, France", vintage: 2019 },
+  { id: 12, wineName: "Whispering Angel Rosé", winery: "Château d'Esclans", type: "rosé", region: "Provence, France", vintage: 2023 },
+];
 
 interface CellarEntryData {
   _id?: string;
@@ -51,11 +66,18 @@ export function AddCellarEntryModal({
   const isEditMode = !!editEntry;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<WineResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isManual, setIsManual] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const searchResults = searchQuery.trim().length > 0
+    ? SAMPLE_WINES.filter((w) =>
+        w.wineName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (w.winery && w.winery.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (w.region && w.region.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
 
   const [form, setForm] = useState({
     wineName: "",
@@ -97,8 +119,9 @@ export function AddCellarEntryModal({
       storageLocation: "", status: "storing", notes: "",
     });
     setSearchQuery("");
-    setSearchResults([]);
+    setShowDropdown(false);
     setIsManual(false);
+    setErrorMsg("");
   }
 
   function handleClose() {
@@ -110,31 +133,10 @@ export function AddCellarEntryModal({
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSearchChange(value: string) {
+  function handleSearchChange(value: string) {
     setSearchQuery(value);
     setField("wineName", value);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-
-    if (value.trim().length < 2) {
-      setSearchResults([]);
-      setShowDropdown(false);
-      return;
-    }
-
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const token = await getToken();
-        const res = await fetch(
-          `${SERVER_URL}/api/inventory/wines/search?q=${encodeURIComponent(value)}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const json = await res.json();
-        setSearchResults(json.data || []);
-        setShowDropdown(true);
-      } catch {
-        setSearchResults([]);
-      }
-    }, 300);
+    setShowDropdown(value.trim().length > 0);
   }
 
   function selectWineFromSearch(wine: WineResult) {
@@ -155,11 +157,14 @@ export function AddCellarEntryModal({
     setIsManual(true);
   }
 
+
   async function handleSubmit() {
     if (!form.wineName.trim()) return;
-    if (!form.quantity || Number(form.quantity) < 0) return;
+    const qty = Number(form.quantity);
+    if (form.quantity === "" || isNaN(qty) || qty < 0) return;
 
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
       const token = await getToken();
       const payload = {
@@ -168,7 +173,7 @@ export function AddCellarEntryModal({
         type: form.type || undefined,
         region: form.region.trim() || undefined,
         vintage: form.vintage ? Number(form.vintage) : undefined,
-        quantity: Number(form.quantity),
+        quantity: qty,
         purchaseDate: form.purchaseDate || undefined,
         storageLocation: form.storageLocation.trim() || undefined,
         status: form.status,
@@ -177,7 +182,7 @@ export function AddCellarEntryModal({
 
       const url = isEditMode
         ? `${SERVER_URL}/api/inventory/${editEntry!._id}`
-        : `${SERVER_URL}/api/inventory/`;
+        : `${SERVER_URL}/api/inventory`;
       const method = isEditMode ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -189,11 +194,15 @@ export function AddCellarEntryModal({
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to save entry.");
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || `Request failed (${res.status})`);
+      }
       onSaved();
       handleClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setErrorMsg(err.message || "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -201,7 +210,7 @@ export function AddCellarEntryModal({
 
   if (!isOpen) return null;
 
-  const canSubmit = form.wineName.trim().length > 0 && Number(form.quantity) >= 0 && !isSubmitting;
+  const canSubmit = form.wineName.trim().length > 0 && form.quantity !== "" && Number(form.quantity) >= 0 && !isSubmitting;
 
   return (
     <div
@@ -258,7 +267,7 @@ export function AddCellarEntryModal({
                 >
                   {searchResults.map((wine) => (
                     <button
-                      key={wine._id}
+                      key={wine.id}
                       className="w-full text-left px-4 py-3 transition-colors"
                       style={{ background: "none", border: "none", cursor: "pointer" }}
                       onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#FDF6EE"; }}
@@ -421,33 +430,45 @@ export function AddCellarEntryModal({
 
         {/* Footer */}
         <div
-          className="flex items-center justify-end gap-3 px-6 py-4"
+          className="px-6 py-4"
           style={{ borderTop: "1px solid #F0E8E0" }}
         >
-          <button
-            onClick={handleClose}
-            style={{
-              background: "none", border: "1px solid #D0C8C0",
-              borderRadius: "999px", padding: "8px 20px",
-              fontFamily: "'DM Sans', sans-serif", fontSize: "14px",
-              color: "#6B6B6B", cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            style={{
-              backgroundColor: canSubmit ? "#722F37" : "#C0A8A8",
-              border: "none", borderRadius: "999px", padding: "8px 24px",
-              fontFamily: "'DM Sans', sans-serif", fontSize: "14px",
-              fontWeight: 500, color: "#fff",
-              cursor: canSubmit ? "pointer" : "not-allowed",
-            }}
-          >
-            {isSubmitting ? "Saving…" : isEditMode ? "Save Changes" : "Add to Cellar"}
-          </button>
+          {errorMsg && (
+            <p
+              className="mb-3 text-sm"
+              style={{ fontFamily: "'DM Sans', sans-serif", color: "#C0392B" }}
+            >
+              {errorMsg}
+            </p>
+          )}
+          <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={handleClose}
+              style={{
+                background: "none", border: "1px solid #D0C8C0",
+                borderRadius: "999px", padding: "8px 20px",
+                fontFamily: "'DM Sans', sans-serif", fontSize: "14px",
+                color: "#6B6B6B", cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            {(isManual || isEditMode) && (
+              <button
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                style={{
+                  backgroundColor: canSubmit ? "#722F37" : "#C0A8A8",
+                  border: "none", borderRadius: "999px", padding: "8px 24px",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: "14px",
+                  fontWeight: 500, color: "#fff",
+                  cursor: canSubmit ? "pointer" : "not-allowed",
+                }}
+              >
+                {isSubmitting ? "Saving…" : isEditMode ? "Save Changes" : "Add to Cellar"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -45,7 +45,7 @@ class Director {
     await builder.loadExistingEntry(entryId);
     if (changedFields.wineId !== undefined || changedFields.wineName !== undefined) {
       builder.setWineInfo(
-        changedFields.wineId,
+        changedFields.wineId,   // may be undefined — setWineInfo only overwrites wineId if defined
         changedFields.wineName,
         changedFields.winery,
         changedFields.type,

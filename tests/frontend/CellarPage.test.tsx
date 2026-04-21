@@ -26,9 +26,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CellarPage } from "../../client/src/app/pages/CellarPage";
 
-// Mock Clerk
+// Mock Clerk — stable getToken reference so useCallback doesn't re-create fetchCellar on every render
+const mockGetToken = vi.fn().mockResolvedValue("mock_token");
 vi.mock("@clerk/clerk-react", () => ({
-  useAuth: () => ({ getToken: vi.fn().mockResolvedValue("mock_token") }),
+  useAuth: () => ({ getToken: mockGetToken }),
 }));
 
 // Mock child components that are tested separately to keep page tests focused
@@ -172,7 +173,9 @@ describe("CellarPage — Add Wine modal", () => {
     const user = userEvent.setup();
     render(<CellarPage />);
     await waitFor(() => screen.getByText(/your cellar is empty/i));
-    await user.click(screen.getByRole("button", { name: /add wine/i }));
+    // Both header and EmptyCellar have "Add Wine" buttons — click any one
+    const addButtons = screen.getAllByRole("button", { name: /add wine/i });
+    await user.click(addButtons[addButtons.length - 1]);
     expect(screen.getByTestId("add-modal")).toBeInTheDocument();
   });
 
