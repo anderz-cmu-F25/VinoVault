@@ -4,6 +4,7 @@ import { Wishlist } from "../lib/models/Wishlist";
 import { Wine } from "../lib/models/Wine";
 import { getClerkId } from "../lib/auth";
 import { findOrCreateUserFromClerk } from "../lib/user-sync";
+import { PriceDropSubject, EmailObserver, NotificationObserver } from "../lib/monitor";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL || "*");
@@ -28,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const wineIds = wishlistItems.map((item) => item.wineId);
       const wines = await Wine.find({ wineId: { $in: wineIds } })
-        .select("wineId name region salePrice")
+        .select("wineId name region salePrice regularPrice")
         .lean();
 
       const wineMap = new Map(wines.map((w) => [w.wineId, w]));
@@ -43,6 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           name: wine?.name ?? "Unknown Wine",
           region: wine?.region ?? null,
           marketPrice: wine?.salePrice ?? null,
+          regularPrice: wine?.regularPrice ?? null,
         };
       });
 
@@ -57,16 +59,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ message: "wineId and targetPrice are required" });
       }
 
+      const numericTarget = Number(targetPrice);
+
+      // Upsert wishlist item
+      let savedItem;
+      let updated = false;
       const existing = await Wishlist.findOne({ email, wineId });
       if (existing) {
-        existing.targetPrice = Number(targetPrice);
+        existing.targetPrice = numericTarget;
         existing.isNotified = false;
-        await existing.save();
-        return res.status(200).json({ data: existing, updated: true });
+        savedItem = await existing.save();
+        updated = true;
+      } else {
+        savedItem = await Wishlist.create({ email, wineId, targetPrice: numericTarget });
       }
 
-      const item = await Wishlist.create({ email, wineId, targetPrice: Number(targetPrice) });
-      return res.status(201).json({ data: item, updated: false });
+      // Immediately notify if the current price already meets the new target
+      try {
+        const wine = await Wine.findOne({ wineId: String(wineId) });
+        if (wine && wine.salePrice !== null && wine.salePrice <= numericTarget) {
+          const subject = new PriceDropSubject();
+          subject.subscribe(new EmailObserver());
+          subject.subscribe(new NotificationObserver());
+          await subject.notify({
+            email,
+            wineId:        String(wineId),
+            wineName:      wine.name,
+            previousPrice: wine.regularPrice,
+            currentPrice:  wine.salePrice,
+            targetPrice:   numericTarget,
+            wineUrl:       `https://www.wine.com/product/${wineId}`,
+          });
+          await Wishlist.updateOne({ email, wineId: String(wineId) }, { isNotified: true });
+        }
+      } catch (notifyErr) {
+        // Non-fatal — wishlist was saved successfully, notification failure shouldn't block response
+        console.error("[wishlist] POST immediate notify error:", notifyErr);
+      }
+
+      return res.status(updated ? 200 : 201).json({ data: savedItem, updated });
     }
 
     // ── DELETE /api/wishlist?id=<_id> ──────────────────────────────────────────

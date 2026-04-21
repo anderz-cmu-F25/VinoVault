@@ -48,9 +48,16 @@ export function NavigationBar() {
     }
   }, [isSignedIn, getToken]);
 
-  // Fetch on sign-in and whenever the panel closes (picks up new reads)
+  // Fetch on sign-in
   useEffect(() => {
     fetchNotifications();
+  }, [fetchNotifications]);
+
+  // Re-fetch when wishlist triggers a potential new notification
+  useEffect(() => {
+    const handler = () => fetchNotifications();
+    window.addEventListener("vinovault:notifications-refresh", handler);
+    return () => window.removeEventListener("vinovault:notifications-refresh", handler);
   }, [fetchNotifications]);
 
   const handleMarkRead = async (id: string) => {
@@ -76,6 +83,19 @@ export function NavigationBar() {
       const token = await getToken();
       await fetch("/api/notifications", {
         method: "PATCH",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+    } catch {
+      await fetchNotifications();
+    }
+  };
+
+  const handleClearAll = async () => {
+    setNotifications([]);
+    try {
+      const token = await getToken();
+      await fetch("/api/notifications", {
+        method: "DELETE",
         headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
     } catch {
@@ -170,6 +190,7 @@ export function NavigationBar() {
                     notifications={notifications}
                     onMarkRead={handleMarkRead}
                     onMarkAllRead={handleMarkAllRead}
+                    onClearAll={handleClearAll}
                   />
                 </div>
 

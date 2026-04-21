@@ -100,8 +100,8 @@ export async function runMonitor(): Promise<MonitorResult> {
   await connectDB();
   console.log("[monitor] Connected to MongoDB");
 
-  const pendingItems = await Wishlist.find({ isNotified: false }).lean();
-  console.log(`[monitor] Found ${pendingItems.length} unnotified wishlist item(s)`);
+  const pendingItems = await Wishlist.find({}).lean();
+  console.log(`[monitor] Found ${pendingItems.length} wishlist item(s) to check`);
 
   // Wire up the subject with all notification channels
   const subject = new PriceDropSubject();
@@ -129,8 +129,6 @@ export async function runMonitor(): Promise<MonitorResult> {
           targetPrice:   item.targetPrice,
           wineUrl:       `https://www.wine.com/product/${item.wineId}`,
         });
-
-        await Wishlist.updateOne({ _id: item._id }, { isNotified: true });
         console.log(`[monitor] Alerted ${item.email} for "${wine.name}"`);
         alerted++;
       } else {

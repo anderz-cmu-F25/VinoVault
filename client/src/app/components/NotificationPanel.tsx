@@ -7,6 +7,7 @@ interface NotificationPanelProps {
   notifications: ApiNotification[];
   onMarkRead: (id: string) => void;
   onMarkAllRead: () => void;
+  onClearAll: () => void;
 }
 
 function timeAgo(isoString: string): string {
@@ -26,6 +27,7 @@ export function NotificationPanel({
   notifications,
   onMarkRead,
   onMarkAllRead,
+  onClearAll,
 }: NotificationPanelProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -142,6 +144,17 @@ export function NotificationPanel({
                 onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
               >
                 Mark all read
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={onClearAll}
+                className="transition-opacity"
+                style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#C4494F', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.6'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+              >
+                Clear all
               </button>
             )}
             {unread.length > 0 && (

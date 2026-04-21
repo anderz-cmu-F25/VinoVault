@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { WineCard } from "../components/WineCard";
 import { AddWineModal } from "../components/AddWineModal";
 import { RemoveWineModal } from "../components/RemoveWineModal";
+import { EditWineModal } from "../components/EditWineModal";
 import { EmptyWishlist } from "../components/EmptyWishlist";
 import { GatedWishlistState } from "../components/GatedWishlistState";
 
@@ -14,6 +15,7 @@ interface WishlistItem {
   name: string;
   region: string | null;
   marketPrice: number | null;
+  regularPrice: number | null;
   targetPrice: number;
   isNotified: boolean;
 }
@@ -23,6 +25,7 @@ export function WishlistPage() {
 
   const [isAddWineModalOpen, setIsAddWineModalOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ id: string; name: string; currentTargetPrice: number } | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +61,44 @@ export function WishlistPage() {
   const handleRemove = (id: string) => {
     const item = wishlistItems.find((w) => w._id === id);
     setRemoveTarget({ id, name: item?.name ?? "This wine" });
+  };
+
+  const handleEdit = (id: string) => {
+    const item = wishlistItems.find((w) => w._id === id);
+    if (!item) return;
+    setEditTarget({ id, name: item.name, currentTargetPrice: item.targetPrice });
+  };
+
+  const confirmEdit = async (newPrice: number) => {
+    if (!editTarget) return;
+    const { id } = editTarget;
+    const item = wishlistItems.find((w) => w._id === id);
+    if (!item) return;
+    setEditTarget(null);
+    setWishlistItems((prev) =>
+      prev.map((w) => (w._id === id ? { ...w, targetPrice: newPrice } : w))
+    );
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/wishlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({ wineId: item.wineId, targetPrice: newPrice }),
+      });
+      if (!res.ok) {
+        await fetchWishlist();
+        toast.error("Failed to update target price");
+      } else {
+        toast.success("Target price updated");
+        window.dispatchEvent(new Event("vinovault:notifications-refresh"));
+      }
+    } catch {
+      await fetchWishlist();
+      toast.error("Network error — please try again");
+    }
   };
 
   const confirmRemove = async () => {
@@ -219,13 +260,17 @@ export function WishlistPage() {
                 name={item.name}
                 region={item.region}
                 marketPrice={item.marketPrice}
+                regularPrice={item.regularPrice}
                 targetPrice={item.targetPrice}
                 status={
                   item.marketPrice != null && item.marketPrice <= item.targetPrice
                     ? "targetMet"
+                    : item.marketPrice != null && item.regularPrice != null && item.marketPrice < item.regularPrice
+                    ? "priceDropped"
                     : "watching"
                 }
                 onRemove={handleRemove}
+                onEdit={handleEdit}
               />
             ))
           ) : (
@@ -249,6 +294,15 @@ export function WishlistPage() {
         wineName={removeTarget?.name ?? ""}
         onCancel={() => setRemoveTarget(null)}
         onConfirm={confirmRemove}
+      />
+
+      {/* Edit Target Price Modal */}
+      <EditWineModal
+        isOpen={editTarget !== null}
+        wineName={editTarget?.name ?? ""}
+        currentTargetPrice={editTarget?.currentTargetPrice ?? 0}
+        onCancel={() => setEditTarget(null)}
+        onConfirm={confirmEdit}
       />
     </main>
   );

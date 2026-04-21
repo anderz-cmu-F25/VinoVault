@@ -6,7 +6,7 @@ import { findOrCreateUserFromClerk } from "../lib/user-sync";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -47,6 +47,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // ── PATCH /api/notifications — mark ALL as read ──────────────────────────
       await Notification.updateMany({ email, isRead: false }, { isRead: true });
       return res.status(200).json({ message: "All notifications marked as read" });
+    }
+
+    // ── DELETE /api/notifications — clear all ─────────────────────────────────
+    if (req.method === "DELETE") {
+      await Notification.deleteMany({ email });
+      return res.status(200).json({ message: "All notifications cleared" });
     }
 
     return res.status(405).json({ message: "Method not allowed" });
