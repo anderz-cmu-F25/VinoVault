@@ -4,7 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "nodemon server/src/server.js",
-    "start": "node server/src/server.js"
+    "start": "node server/src/server.js",
+    "test": "jest --forceExit",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/backend/**/*.test.js"],
+    "testTimeout": 30000
   },
   "dependencies": {
     "@clerk/backend": "^1.26.0",
@@ -13,13 +20,18 @@
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "mongoose": "^9.4.1",
-    "svix": "^1.67.0",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "svix": "^1.67.0"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
+    "@types/supertest": "^7.2.0",
     "@vercel/node": "^5.3.2",
+    "jest": "^30.3.0",
+    "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.10",
+    "supertest": "^7.2.2",
     "typescript": "^5.5.0"
   }
 }
