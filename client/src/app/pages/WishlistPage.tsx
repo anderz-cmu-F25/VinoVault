@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import { WineCard } from "../components/WineCard";
 import { AddWineModal } from "../components/AddWineModal";
+import { RemoveWineModal } from "../components/RemoveWineModal";
 import { EmptyWishlist } from "../components/EmptyWishlist";
 import { GatedWishlistState } from "../components/GatedWishlistState";
 
@@ -21,6 +22,7 @@ export function WishlistPage() {
   const { isSignedIn, getToken } = useAuth();
 
   const [isAddWineModalOpen, setIsAddWineModalOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,11 +55,15 @@ export function WishlistPage() {
     fetchWishlist();
   };
 
-  const handleRemove = async (id: string) => {
-    const confirmed = window.confirm("Remove this wine from your wishlist?");
-    if (!confirmed) return;
+  const handleRemove = (id: string) => {
+    const item = wishlistItems.find((w) => w._id === id);
+    setRemoveTarget({ id, name: item?.name ?? "This wine" });
+  };
 
-    // Optimistic update
+  const confirmRemove = async () => {
+    if (!removeTarget) return;
+    const { id } = removeTarget;
+    setRemoveTarget(null);
     setWishlistItems((prev) => prev.filter((item) => item._id !== id));
     try {
       const token = await getToken();
@@ -66,7 +72,6 @@ export function WishlistPage() {
         headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
       if (!res.ok) {
-        // Revert on failure
         await fetchWishlist();
         toast.error("Failed to remove wine");
       } else {
@@ -236,6 +241,14 @@ export function WishlistPage() {
         isOpen={isAddWineModalOpen}
         onClose={() => setIsAddWineModalOpen(false)}
         onWineAdded={fetchWishlist}
+      />
+
+      {/* Remove Wine Modal */}
+      <RemoveWineModal
+        isOpen={removeTarget !== null}
+        wineName={removeTarget?.name ?? ""}
+        onCancel={() => setRemoveTarget(null)}
+        onConfirm={confirmRemove}
       />
     </main>
   );
