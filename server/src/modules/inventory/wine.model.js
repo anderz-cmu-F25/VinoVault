@@ -30,6 +30,6 @@ const wineSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const WineModel = mongoose.model("Wine", wineSchema);
+const WineModel = mongoose.models.Wine || mongoose.model("Wine", wineSchema);
 
 module.exports = WineModel;
