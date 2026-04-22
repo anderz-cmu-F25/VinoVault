@@ -91,7 +91,7 @@ export class NotificationObserver implements PriceDropObserver {
   }
 }
 
-// ── Main monitor function ─────────────────────────────────────────────────────
+// ── Price refresh ─────────────────────────────────────────────────────────────
 
 export interface MonitorResult {
   checked: number;
@@ -100,18 +100,15 @@ export interface MonitorResult {
   refreshFailed: number;
 }
 
-// ── Price refresh ─────────────────────────────────────────────────────────────
-
-const REFRESH_DELAY_MS = 800; // courtesy delay between ScraperAPI requests
+const REFRESH_DELAY_MS = 800;
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * For every unique wineId in the wishlist, fetches the latest price from
- * wine.com via ScraperAPI and persists it to the Wine collection.
- * Returns counts of successful and failed refreshes.
+ * Fetches the latest CA price for each unique wineId and writes it back
+ * to Wine.salePrice / Wine.regularPrice in MongoDB.
  */
 async function refreshWinePrices(wineIds: string[]): Promise<{ refreshed: number; refreshFailed: number }> {
   let refreshed = 0;
@@ -120,16 +117,15 @@ async function refreshWinePrices(wineIds: string[]): Promise<{ refreshed: number
   for (const wineId of wineIds) {
     const wine = await Wine.findOne({ wineId });
     if (!wine) {
-      console.log(`[monitor] Wine not found for wineId "${wineId}" during refresh, skipping`);
+      console.log(`[monitor] Wine not found for wineId "${wineId}", skipping`);
       continue;
     }
-
     if (!wine.wineUrl) {
       console.log(`[monitor] No wineUrl for "${wine.name}", skipping refresh`);
       continue;
     }
 
-    console.log(`[monitor] Refreshing price for "${wine.name}" …`);
+    console.log(`[monitor] Refreshing "${wine.name}" …`);
     const prices = await fetchWinePrice(wine.wineUrl);
 
     if (prices) {
@@ -137,12 +133,10 @@ async function refreshWinePrices(wineIds: string[]): Promise<{ refreshed: number
         { wineId },
         { $set: { regularPrice: prices.regularPrice, salePrice: prices.salePrice } }
       );
-      console.log(
-        `[monitor] Updated "${wine.name}" — regular: $${prices.regularPrice}, sale: $${prices.salePrice}`
-      );
+      console.log(`[monitor] Updated "${wine.name}" — regular: $${prices.regularPrice}, sale: $${prices.salePrice}`);
       refreshed++;
     } else {
-      console.warn(`[monitor] Price refresh failed for "${wine.name}", keeping existing price`);
+      console.warn(`[monitor] Refresh failed for "${wine.name}", keeping existing price`);
       refreshFailed++;
     }
 
@@ -161,13 +155,11 @@ export async function runMonitor(): Promise<MonitorResult> {
   const pendingItems = await Wishlist.find({}).lean();
   console.log(`[monitor] Found ${pendingItems.length} wishlist item(s) to check`);
 
-  // Refresh prices for all wishlisted wines before comparing
-  const uniqueWineIds = [...new Set(pendingItems.map((item) => item.wineId))];
+  const uniqueWineIds = [...new Set(pendingItems.map((i) => i.wineId))];
   console.log(`[monitor] Refreshing prices for ${uniqueWineIds.length} unique wine(s) …`);
   const { refreshed, refreshFailed } = await refreshWinePrices(uniqueWineIds);
   console.log(`[monitor] Price refresh complete — updated: ${refreshed}, failed: ${refreshFailed}`);
 
-  // Wire up the subject with all notification channels
   const subject = new PriceDropSubject();
   subject.subscribe(new EmailObserver());
   subject.subscribe(new NotificationObserver());
@@ -177,7 +169,6 @@ export async function runMonitor(): Promise<MonitorResult> {
   for (const item of pendingItems) {
     try {
       const wine = await Wine.findOne({ wineId: item.wineId });
-
       if (!wine) {
         console.log(`[monitor] Wine not found for wineId "${item.wineId}", skipping`);
         continue;
@@ -194,12 +185,10 @@ export async function runMonitor(): Promise<MonitorResult> {
           targetPrice:   item.targetPrice,
           wineUrl,
         });
-        console.log(`[monitor] Alerted ${item.email} for "${wine.name}"`);
+        console.log(`[monitor] Alerted ${item.email} for "${wine.name}" @ $${wine.salePrice}`);
         alerted++;
       } else {
-        console.log(
-          `[monitor] No alert for "${wine.name}" — $${wine.salePrice} > target $${item.targetPrice}`
-        );
+        console.log(`[monitor] No alert for "${wine.name}" — $${wine.salePrice} > target $${item.targetPrice}`);
       }
     } catch (err) {
       console.error(`[monitor] Error processing item ${item._id}:`, err);
