@@ -17,6 +17,7 @@ import { Wishlist } from "./models/Wishlist";
 import { Wine } from "./models/Wine";
 import { Notification } from "./models/Notification";
 import { sendPriceAlertEmail } from "./email";
+import { fetchWinePrice } from "./priceFetcher";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -95,7 +96,63 @@ export class NotificationObserver implements PriceDropObserver {
 export interface MonitorResult {
   checked: number;
   alerted: number;
+  refreshed: number;
+  refreshFailed: number;
 }
+
+// ── Price refresh ─────────────────────────────────────────────────────────────
+
+const REFRESH_DELAY_MS = 800; // courtesy delay between ScraperAPI requests
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * For every unique wineId in the wishlist, fetches the latest price from
+ * wine.com via ScraperAPI and persists it to the Wine collection.
+ * Returns counts of successful and failed refreshes.
+ */
+async function refreshWinePrices(wineIds: string[]): Promise<{ refreshed: number; refreshFailed: number }> {
+  let refreshed = 0;
+  let refreshFailed = 0;
+
+  for (const wineId of wineIds) {
+    const wine = await Wine.findOne({ wineId });
+    if (!wine) {
+      console.log(`[monitor] Wine not found for wineId "${wineId}" during refresh, skipping`);
+      continue;
+    }
+
+    if (!wine.wineUrl) {
+      console.log(`[monitor] No wineUrl for "${wine.name}", skipping refresh`);
+      continue;
+    }
+
+    console.log(`[monitor] Refreshing price for "${wine.name}" …`);
+    const prices = await fetchWinePrice(wine.wineUrl);
+
+    if (prices) {
+      await Wine.updateOne(
+        { wineId },
+        { $set: { regularPrice: prices.regularPrice, salePrice: prices.salePrice } }
+      );
+      console.log(
+        `[monitor] Updated "${wine.name}" — regular: $${prices.regularPrice}, sale: $${prices.salePrice}`
+      );
+      refreshed++;
+    } else {
+      console.warn(`[monitor] Price refresh failed for "${wine.name}", keeping existing price`);
+      refreshFailed++;
+    }
+
+    await sleep(REFRESH_DELAY_MS);
+  }
+
+  return { refreshed, refreshFailed };
+}
+
+// ── Main monitor function ─────────────────────────────────────────────────────
 
 export async function runMonitor(): Promise<MonitorResult> {
   await connectDB();
@@ -103,6 +160,12 @@ export async function runMonitor(): Promise<MonitorResult> {
 
   const pendingItems = await Wishlist.find({}).lean();
   console.log(`[monitor] Found ${pendingItems.length} wishlist item(s) to check`);
+
+  // Refresh prices for all wishlisted wines before comparing
+  const uniqueWineIds = [...new Set(pendingItems.map((item) => item.wineId))];
+  console.log(`[monitor] Refreshing prices for ${uniqueWineIds.length} unique wine(s) …`);
+  const { refreshed, refreshFailed } = await refreshWinePrices(uniqueWineIds);
+  console.log(`[monitor] Price refresh complete — updated: ${refreshed}, failed: ${refreshFailed}`);
 
   // Wire up the subject with all notification channels
   const subject = new PriceDropSubject();
@@ -143,6 +206,6 @@ export async function runMonitor(): Promise<MonitorResult> {
     }
   }
 
-  console.log(`[monitor] Done — checked: ${pendingItems.length}, alerted: ${alerted}`);
-  return { checked: pendingItems.length, alerted };
+  console.log(`[monitor] Done — checked: ${pendingItems.length}, alerted: ${alerted}, refreshed: ${refreshed}, refreshFailed: ${refreshFailed}`);
+  return { checked: pendingItems.length, alerted, refreshed, refreshFailed };
 }
