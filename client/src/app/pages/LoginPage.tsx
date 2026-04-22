@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSignIn } from "@clerk/clerk-react";
 
 export function LoginPage() {
@@ -21,11 +21,22 @@ export function LoginPage() {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/wishlist");
+        navigate("/discover");
+      } else {
+        setError("Sign in could not be completed. Please try again.");
       }
     } catch (err: unknown) {
-      const clerkError = err as { errors?: { message: string }[] };
-      setError(clerkError.errors?.[0]?.message ?? "Sign in failed. Please try again.");
+      const clerkError = err as { errors?: { code: string; message: string }[] };
+      const code = clerkError.errors?.[0]?.code;
+      if (code === "strategy_for_user_invalid") {
+        setError("This account uses Google Sign-In. Please use the 'Continue with Google' button below.");
+      } else if (code === "form_identifier_not_found") {
+        setError("No account found with this email. Please sign up first.");
+      } else if (code === "form_password_incorrect") {
+        setError("Incorrect password. Please try again.");
+      } else {
+        setError(clerkError.errors?.[0]?.message ?? "Sign in failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -33,11 +44,17 @@ export function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     if (!isLoaded) return;
-    await signIn.authenticateWithRedirect({
-      strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/wishlist",
-    });
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: "/discover",
+      });
+    } catch (err: unknown) {
+      console.error("Google SignIn Error:", err);
+      const clerkError = err as { errors?: { message: string }[] };
+      setError(clerkError.errors?.[0]?.message ?? "Google sign-in failed. Please try again.");
+    }
   };
 
   return (
@@ -189,6 +206,9 @@ export function LoginPage() {
             </p>
           )}
 
+          {/* Clerk CAPTCHA widget mount point (required for bot protection) */}
+          <div id="clerk-captcha" />
+
           {/* Sign In Button */}
           <button
             type="submit"
@@ -290,18 +310,14 @@ export function LoginPage() {
           }}
         >
           Don't have an account?{' '}
-          <a
-            href="/signup"
+          <Link
+            to="/signup"
             className="transition-colors"
             style={{ 
               color: '#722F37',
               textDecoration: 'none',
               cursor: 'pointer',
               fontWeight: 500
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/signup');
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.opacity = '0.7';
@@ -311,7 +327,7 @@ export function LoginPage() {
             }}
           >
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

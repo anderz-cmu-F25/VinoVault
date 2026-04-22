@@ -150,8 +150,9 @@ Browser (Vercel)
 
 - Node.js ≥ 18
 - npm
-- MongoDB Atlas cluster
-- Clerk account (for auth keys)
+- MongoDB Atlas account
+- Clerk account
+- ScraperAPI account (for wine data)
 
 ### 1. Clone & Install
 
@@ -219,6 +220,23 @@ npm run dev
 
 ---
 
+## 🍷 Wine Data Pipeline
+
+Wine catalog data is scraped from wine.com and seeded into MongoDB.
+
+```bash
+# 1. Scrape → scripts/wine_data.json
+npm run scrape
+
+# 2. Import into MongoDB
+npm run seed
+```
+
+Requires `SCRAPERAPI_KEY` in `.env.local`. `wine_data.json` is gitignored.
+
+---
+
+## 🔗 Clerk Webhook Setup
 ## 🚢 Production Deployment
 
 ### Backend → Render
