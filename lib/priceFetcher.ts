@@ -11,11 +11,16 @@ export interface WinePrice {
   salePrice: number | null;
 }
 
-/** Converts wine.com's { whole, fractional } price object to a float. */
+/** Converts wine.com's { whole, fractional, display } price object to a float. */
 function parsePriceField(
-  priceObj: { whole?: number; fractional?: number } | null | undefined
+  priceObj: { whole?: number | string; fractional?: number | string; display?: string } | null | undefined
 ): number | null {
-  if (!priceObj || priceObj.whole == null) return null;
+  if (!priceObj) return null;
+  if (priceObj.display) {
+    const val = parseFloat(priceObj.display.replace(/[^0-9.]/g, ""));
+    if (!isNaN(val)) return val;
+  }
+  if (priceObj.whole == null) return null;
   const frac = String(priceObj.fractional ?? 0).padStart(2, "0");
   return parseFloat(`${priceObj.whole}.${frac}`);
 }
@@ -61,20 +66,25 @@ export async function fetchWinePrice(wineUrl: string): Promise<WinePrice | null>
 
     const data = JSON.parse(jsonString);
 
-    // wine.com product pages expose the item under model.product.catalogModel
-    // List pages expose it under model.collection.models[0].catalogModel
+    // Product pages: model.attributes.productModel.searchProductModel
+    // List pages (fallback): model.collection.models[0].catalogModel
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let catalog: any =
+    const searchProduct: any =
+      data?.model?.attributes?.productModel?.searchProductModel;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const catalogFallback: any =
       data?.model?.product?.catalogModel ??
       data?.model?.collection?.models?.[0]?.catalogModel;
 
-    if (!catalog) {
-      console.error(`[priceFetcher] No catalog data found in sharify for ${wineUrl}`);
+    const source = searchProduct ?? catalogFallback;
+
+    if (!source) {
+      console.error(`[priceFetcher] No price data found in sharify for ${wineUrl}`);
       return null;
     }
 
-    const regularPrice = parsePriceField(catalog.regularPrice);
-    const salePrice = parsePriceField(catalog.salePrice) ?? regularPrice;
+    const regularPrice = parsePriceField(source.regularPrice);
+    const salePrice = parsePriceField(source.salePrice) ?? regularPrice;
 
     return { regularPrice, salePrice };
   } catch (err) {
