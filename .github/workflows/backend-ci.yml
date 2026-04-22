@@ -27,3 +27,6 @@ jobs:
 
       - name: Run backend tests
         run: npm test
+
+      - name: Trigger Render Deploy
+        run: curl "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
