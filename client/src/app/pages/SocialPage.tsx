@@ -271,9 +271,9 @@ export function SocialPage() {
     let fallbackName = "Unknown User";
     if (currentUserId && userAId && userBId) {
       if (String(userAId) === String(currentUserId)) {
-        fallbackName = String(item.userBUsername || userBId || "Unknown User");
+        fallbackName = String(item.userBUsername || "Unknown User");
       } else {
-        fallbackName = String(item.userAUsername || userAId || "Unknown User");
+        fallbackName = String(item.userAUsername || "Unknown User");
       }
     }
 
