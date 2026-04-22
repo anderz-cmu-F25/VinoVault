@@ -9,5 +9,5 @@
     "outDir": ".vercel/output",
     "rootDir": "."
   },
-  "include": ["api/**/*"]
+  "include": ["api/**/*", "lib/**/*"]
 }

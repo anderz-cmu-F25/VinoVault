@@ -1,10 +1,10 @@
 import { Wine } from "lucide-react";
 
 interface EmptyWishlistProps {
-  onBrowseClick: () => void;
+  onAddClick: () => void;
 }
 
-export function EmptyWishlist({ onBrowseClick }: EmptyWishlistProps) {
+export function EmptyWishlist({ onAddClick }: EmptyWishlistProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6">
       {/* Wine Glass Icon */}
@@ -26,7 +26,7 @@ export function EmptyWishlist({ onBrowseClick }: EmptyWishlistProps) {
           color: '#722F37'
         }}
       >
-        Your wishlist is empty
+        No wishlist
       </h2>
 
       {/* Subtext */}
@@ -38,30 +38,28 @@ export function EmptyWishlist({ onBrowseClick }: EmptyWishlistProps) {
           lineHeight: '1.6'
         }}
       >
-        Start tracking wines you love and we'll alert you when prices drop
+        Add a wine to start tracking prices.
       </p>
 
       {/* CTA Button */}
-      <button
-        onClick={onBrowseClick}
-        className="px-8 py-3 rounded-full transition-all hover:shadow-md"
-        style={{ 
-          backgroundColor: '#722F37',
-          color: '#ffffff',
-          fontFamily: "'DM Sans', sans-serif",
-          fontWeight: 500,
-          cursor: 'pointer',
-          border: 'none'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#5e2529';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = '#722F37';
-        }}
-      >
-        Browse Wines
-      </button>
+      <div className="flex items-center">
+        <button
+          onClick={onAddClick}
+          className="px-8 py-3 rounded-full transition-all hover:shadow-md"
+          style={{
+            backgroundColor: '#722F37',
+            color: '#ffffff',
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 500,
+            cursor: 'pointer',
+            border: 'none'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#5e2529'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#722F37'; }}
+        >
+          Add Wine
+        </button>
+      </div>
     </div>
   );
 }
