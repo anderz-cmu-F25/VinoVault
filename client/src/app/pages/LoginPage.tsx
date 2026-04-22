@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSignIn } from "@clerk/clerk-react";
 
 export function LoginPage() {
@@ -10,7 +10,9 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, setActive, isLoaded } = useSignIn();
+  const isResetPasswordFlow = location.hash.startsWith("#/reset-password");
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,6 +200,22 @@ export function LoginPage() {
               </button>
             </div>
           </div>
+
+          {/* Google account conflict warning */}
+          {isResetPasswordFlow && (
+            <div
+              className="mb-4 px-4 py-3 rounded-lg text-center"
+              style={{
+                backgroundColor: '#FFF3CD',
+                border: '1px solid #F0C040',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '13px',
+                color: '#7A5C00',
+              }}
+            >
+              This email is already registered with a password. Please sign in with your email and password below.
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
