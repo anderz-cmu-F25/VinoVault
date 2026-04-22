@@ -45,6 +45,20 @@ async function findOrCreateWine(wineData) {
   });
 }
 
+async function findReadyEntriesByUserId(userId) {
+  return CellarEntryModel.find({ userId, status: "ready" }).sort({ wineName: 1 });
+}
+
+async function findUserByEmail(email) {
+  // Uses the shared User collection (populated by Clerk webhook sync)
+  const mongoose = require("mongoose");
+  const User = mongoose.models.User || mongoose.model("User", new mongoose.Schema(
+    { clerkId: String, email: String },
+    { strict: false }
+  ));
+  return User.findOne({ email }).lean();
+}
+
 async function searchWines(query) {
   return WineModel.find({
     wineName: { $regex: query, $options: "i" },
@@ -56,6 +70,8 @@ async function searchWines(query) {
 module.exports = {
   findAllByUserId,
   findEntryById,
+  findReadyEntriesByUserId,
+  findUserByEmail,
   createEntry,
   updateEntry,
   deleteEntry,
