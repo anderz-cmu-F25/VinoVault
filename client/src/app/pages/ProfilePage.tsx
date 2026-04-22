@@ -28,8 +28,6 @@ export function ProfilePage() {
         setLoading(true);
         setError("");
         const token = await getToken();
-
-        const token = await getToken();
         const response = await fetch(
           `${SERVER_URL}/api/social/notification-preference`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -61,8 +59,6 @@ export function ProfilePage() {
       setSaving(true);
       setError("");
       setSuccessMessage("");
-      const token = await getToken();
-
       const token = await getToken();
       const response = await fetch(
         `${SERVER_URL}/api/social/notification-preference`,
@@ -265,7 +261,7 @@ export function ProfilePage() {
                 fontSize: "13px",
               }}
             >
-              Current DB user id: <strong>{user.clerkId}</strong>
+              Current DB user id: <strong>{user.id}</strong>
             </div>
           )}
         </div>
