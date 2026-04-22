@@ -353,21 +353,22 @@ export function AddWineModal({ isOpen, onClose, onWineAdded }: AddWineModalProps
                 return (
                   <div
                     key={wine.wineId}
-                    onMouseDown={() => handleSelectWine(wine)}
-                    className="px-4 py-3 cursor-pointer transition-colors border-b last:border-b-0"
+                    onMouseDown={() => { if (!isWishlisted) handleSelectWine(wine); }}
+                    className="px-4 py-3 transition-colors border-b last:border-b-0"
                     style={{
                       borderColor: "#F0F0F0",
                       backgroundColor:
                         selectedWine?.wineId === wine.wineId ? "#FDF6EE" : "#ffffff",
-                      opacity: isWishlisted ? 0.75 : 1,
+                      opacity: isWishlisted ? 0.5 : 1,
+                      cursor: isWishlisted ? "not-allowed" : "pointer",
                     }}
                     onMouseEnter={(e) => {
-                      if (selectedWine?.wineId !== wine.wineId) {
+                      if (!isWishlisted && selectedWine?.wineId !== wine.wineId) {
                         e.currentTarget.style.backgroundColor = "#F9F9F9";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (selectedWine?.wineId !== wine.wineId) {
+                      if (!isWishlisted && selectedWine?.wineId !== wine.wineId) {
                         e.currentTarget.style.backgroundColor = "#ffffff";
                       }
                     }}

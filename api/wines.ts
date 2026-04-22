@@ -19,10 +19,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const query = String(search ?? "").trim();
     const pageNumber = Math.max(1, Number(page ?? 1) || 1);
     const pageSize = Math.min(50, Math.max(1, Number(limit ?? 24) || 24));
-    const filter: Record<string, unknown> = {};
+    const filter: Record<string, unknown> = { name: { $exists: true, $nin: [null, ""] } };
 
     if (query.length >= 2) {
-      filter.name = { $regex: query, $options: "i" };
+      filter.name = { $exists: true, $nin: [null, ""], $regex: query, $options: "i" };
     }
 
     if (region && String(region).trim()) {

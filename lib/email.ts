@@ -1,4 +1,18 @@
 import nodemailer from "nodemailer";
+import type { Options as SMTPOptions } from "nodemailer/lib/smtp-transport";
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT ?? 587),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    family: 4,
+  } as SMTPOptions);
+}
 
 interface PriceAlertEmailParams {
   email: string;
@@ -8,16 +22,6 @@ interface PriceAlertEmailParams {
   wineUrl: string;
 }
 
-// Singleton transporter — reused across serverless invocations
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: false, // STARTTLS on port 587
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
 
 function buildHtml({
   wineName,
@@ -120,7 +124,7 @@ export async function sendPriceAlertEmail({
 }: PriceAlertEmailParams): Promise<void> {
   try {
     console.log(`[email] Sending price alert to ${email} for "${wineName}"`);
-    await transporter.sendMail({
+    await createTransporter().sendMail({
       from: process.env.SMTP_FROM,
       to: email,
       subject: `🚨 Price Drop Alert: ${wineName} has reached your target price!`,

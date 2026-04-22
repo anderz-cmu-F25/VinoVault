@@ -9,6 +9,7 @@ export interface IWine extends Document {
   regularPrice: number | null;
   salePrice: number | null;
   rating: string | null;
+  wineUrl: string | null;
 }
 
 const WineSchema = new Schema<IWine>(
@@ -21,6 +22,7 @@ const WineSchema = new Schema<IWine>(
     regularPrice: { type: Number, default: null },
     salePrice: { type: Number, default: null },
     rating: { type: String, default: null },
+    wineUrl: { type: String, default: null },
   },
   { timestamps: true }
 );

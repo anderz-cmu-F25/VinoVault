@@ -78,6 +78,9 @@ async function scrapeWinePage(pageNumber) {
         regularPrice: regPrice,
         salePrice: salePrice || regPrice,
         rating: wine.averageRatingModel?.ratingsAverageDisplay || null,
+        url: catalog.seoFullName && catalog.productTemplateId
+          ? `https://www.wine.com/product/${catalog.seoFullName.toLowerCase()}/${catalog.productTemplateId}`
+          : null,
       });
     });
 

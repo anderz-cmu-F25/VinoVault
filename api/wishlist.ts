@@ -88,7 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             previousPrice: wine.regularPrice,
             currentPrice:  wine.salePrice,
             targetPrice:   numericTarget,
-            wineUrl:       `https://www.wine.com/product/${wineId}`,
+            wineUrl:       wine.wineUrl ?? `https://www.wine.com/search/red-wine/0?searchterm=${encodeURIComponent(wine.name)}`,
           });
           await Wishlist.updateOne({ email, wineId: String(wineId) }, { isNotified: true });
         }

@@ -121,6 +121,7 @@ export async function runMonitor(): Promise<MonitorResult> {
       }
 
       if (wine.salePrice !== null && wine.salePrice <= item.targetPrice) {
+        const wineUrl = wine.wineUrl ?? `https://www.wine.com/search/red-wine/0?searchterm=${encodeURIComponent(wine.name)}`;
         await subject.notify({
           email:         item.email,
           wineId:        item.wineId,
@@ -128,7 +129,7 @@ export async function runMonitor(): Promise<MonitorResult> {
           previousPrice: wine.regularPrice,
           currentPrice:  wine.salePrice,
           targetPrice:   item.targetPrice,
-          wineUrl:       `https://www.wine.com/product/${item.wineId}`,
+          wineUrl,
         });
         console.log(`[monitor] Alerted ${item.email} for "${wine.name}"`);
         alerted++;

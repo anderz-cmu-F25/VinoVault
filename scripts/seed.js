@@ -20,6 +20,7 @@ const wineSchema = new mongoose.Schema(
     regularPrice: { type: Number, default: null },
     salePrice: { type: Number, default: null },
     rating: { type: String, default: null },
+    wineUrl: { type: String, default: null },
   },
   { timestamps: true }
 );
@@ -61,6 +62,7 @@ async function seed() {
           regularPrice: wine.regularPrice,
           salePrice: wine.salePrice,
           rating: wine.rating,
+          wineUrl: wine.url ?? null,
         },
         { upsert: true }
       );
