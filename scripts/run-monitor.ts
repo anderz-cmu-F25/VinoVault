@@ -5,18 +5,20 @@
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "..", ".env.local") });
 
-import mongoose from "mongoose";
-import { runMonitor } from "../lib/monitor";
+const require = createRequire(import.meta.url);
+const mongoose = require("mongoose");
+const { runMonitor } = require("../lib/monitor");
 
 runMonitor()
-  .then((result) => {
+  .then((result: unknown) => {
     console.log("\n[run-monitor] Result:", result);
   })
-  .catch((err) => {
+  .catch((err: unknown) => {
     console.error("[run-monitor] Fatal:", err);
   })
   .finally(async () => {
