@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSignUp } from "@clerk/clerk-react";
 
 type PasswordStrength = "weak" | "medium" | "strong" | null;
@@ -14,8 +14,84 @@ export function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [continuationUsername, setContinuationUsername] = useState("");
+  const [hasTriedAutoComplete, setHasTriedAutoComplete] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp, setActive, isLoaded } = useSignUp();
+  const isClerkContinuation = location.hash.startsWith("#/continue");
+  const missingFields = signUp?.missingFields ?? [];
+  const isUsernameMissing = missingFields.includes("username");
+
+  useEffect(() => {
+    if (!isClerkContinuation || continuationUsername) return;
+
+    const suggestedUsername =
+      signUp?.username ||
+      signUp?.emailAddress?.split("@")[0]?.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 30) ||
+      "";
+
+    if (suggestedUsername) {
+      setContinuationUsername(suggestedUsername);
+    }
+  }, [continuationUsername, isClerkContinuation, signUp?.emailAddress, signUp?.username]);
+
+  const completeOAuthSignUp = async (usernameOverride?: string) => {
+    if (!isLoaded || !signUp) return;
+
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const nextUsername = usernameOverride?.trim() ?? continuationUsername.trim();
+      const result = await signUp.update({
+        ...(isUsernameMissing && nextUsername ? { username: nextUsername } : {}),
+      });
+
+      if (result.status === "complete" && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        navigate("/discover");
+        return;
+      }
+
+      if (result.missingFields.includes("username")) {
+        setError("Please choose a username to finish Google sign up.");
+        return;
+      }
+
+      setError(`Google sign-up still needs: ${result.missingFields.join(", ")}`);
+    } catch (err: unknown) {
+      const clerkError = err as { errors?: { message: string }[] };
+      setError(
+        clerkError.errors?.[0]?.message ?? "Google sign-up could not be completed."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !isClerkContinuation ||
+      !isLoaded ||
+      !signUp ||
+      hasTriedAutoComplete ||
+      !isUsernameMissing ||
+      !continuationUsername.trim()
+    ) {
+      return;
+    }
+
+    setHasTriedAutoComplete(true);
+    void completeOAuthSignUp(continuationUsername);
+  }, [
+    continuationUsername,
+    hasTriedAutoComplete,
+    isClerkContinuation,
+    isLoaded,
+    isUsernameMissing,
+    signUp,
+  ]);
 
   const getPasswordStrength = (pwd: string): PasswordStrength => {
     if (pwd.length === 0) return null;
@@ -70,7 +146,7 @@ export function SignupPage() {
       });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/wishlist");
+        navigate("/discover");
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { message: string }[] };
@@ -82,12 +158,164 @@ export function SignupPage() {
 
   const handleGoogleSignUp = async () => {
     if (!isLoaded) return;
-    await signUp.authenticateWithRedirect({
-      strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/wishlist",
-    });
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: "/discover",
+      });
+    } catch (err: unknown) {
+      console.error("Google SignUp Error:", err);
+      const clerkError = err as { errors?: { message: string }[] };
+      setError(clerkError.errors?.[0]?.message ?? "Google sign-up failed. Please try again.");
+    }
   };
+
+  if (isClerkContinuation) {
+    const handleCompleteOAuthSignUp = async (e: React.FormEvent) => {
+      e.preventDefault();
+      await completeOAuthSignUp();
+    };
+
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-6 py-12"
+        style={{ backgroundColor: "#FDF6EE" }}
+      >
+        <div
+          className="w-full"
+          style={{
+            maxWidth: "420px",
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            padding: "40px",
+            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.08)",
+          }}
+        >
+          <h1
+            className="text-center mb-2"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "32px",
+              color: "#722F37",
+              lineHeight: "1.2",
+            }}
+          >
+            VinoVault
+          </h1>
+
+          <h2
+            className="text-center mb-2"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: "24px",
+              color: "#2A2A2A",
+              lineHeight: "1.3",
+            }}
+          >
+            Finish your Google sign up
+          </h2>
+
+          <p
+            className="text-center mb-8"
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "15px",
+              color: "#7A7A7A",
+            }}
+          >
+            {isUsernameMissing
+              ? "Using your Google account info to complete your account."
+              : "We need one more step to complete your account."}
+          </p>
+
+          <form onSubmit={handleCompleteOAuthSignUp}>
+            {isUsernameMissing && (
+              <div className="mb-6">
+                <label
+                  htmlFor="continuation-username"
+                  className="block mb-2"
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "13px",
+                    color: "#5A5A5A",
+                  }}
+                >
+                  Username
+                </label>
+                <input
+                  id="continuation-username"
+                  type="text"
+                  value={continuationUsername}
+                  onChange={(e) => setContinuationUsername(e.target.value)}
+                  className="w-full transition-all"
+                  style={{
+                    height: "44px",
+                    padding: "0 14px",
+                    borderRadius: "8px",
+                    border: "1px solid #D0D0D0",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "14px",
+                    color: "#2A2A2A",
+                  }}
+                />
+              </div>
+            )}
+
+            {error && (
+              <p
+                className="mb-4 text-center"
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "13px",
+                  color: "#DC2626",
+                }}
+              >
+                {error}
+              </p>
+            )}
+
+            {!isUsernameMissing && missingFields.length > 0 && (
+              <p
+                className="mb-4 text-center"
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "13px",
+                  color: "#7A7A7A",
+                }}
+              >
+                Missing fields: {missingFields.join(", ")}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading || (isUsernameMissing && !continuationUsername.trim())}
+              className="w-full transition-all"
+              style={{
+                height: "44px",
+                borderRadius: "8px",
+                backgroundColor: "#722F37",
+                color: "#ffffff",
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "14px",
+                fontWeight: 500,
+                cursor:
+                  isLoading || (isUsernameMissing && !continuationUsername.trim())
+                    ? "not-allowed"
+                    : "pointer",
+                border: "none",
+                opacity:
+                  isLoading || (isUsernameMissing && !continuationUsername.trim()) ? 0.7 : 1,
+              }}
+            >
+              {isLoading ? "Completing..." : "Continue with Google"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -484,18 +712,14 @@ export function SignupPage() {
           }}
         >
           Already have an account?{' '}
-          <a
-            href="/login"
+          <Link
+            to="/login"
             className="transition-colors"
             style={{ 
               color: '#722F37',
               textDecoration: 'none',
               cursor: 'pointer',
               fontWeight: 500
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/login');
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.opacity = '0.7';
@@ -505,7 +729,7 @@ export function SignupPage() {
             }}
           >
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </div>

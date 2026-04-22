@@ -22,6 +22,11 @@ export default defineConfig({
       'lucide-react': path.join(CLIENT_NODE_MODULES, 'lucide-react'),
     },
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

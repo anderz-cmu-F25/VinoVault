@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import { Toaster } from "sonner";
 import { NavigationBar } from "../components/NavigationBar";
 
 export function RootLayout() {
@@ -12,6 +13,7 @@ export function RootLayout() {
     >
       <NavigationBar />
       <Outlet />
+      <Toaster position="bottom-right" richColors />
     </div>
   );
 }

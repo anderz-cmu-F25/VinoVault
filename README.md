@@ -54,12 +54,17 @@ It unifies features like recommendations, reviews, inventory tracking, and socia
 
 ## 🏗️ Architecture Overview
 
-VinoVault uses a **split deployment model**: the frontend is a static React SPA hosted on Vercel, and the backend is a persistent Express server hosted on Render. This split is required because the real-time chat feature uses Socket.IO (WebSockets), which cannot run in Vercel's serverless environment.
+VinoVault uses a **split backend model**: most API routes run as Vercel Serverless Functions, while the social/chat features run on a persistent Express server hosted on Render. This split is required because the real-time chat feature uses Socket.IO (WebSockets), which cannot run in Vercel's serverless environment.
 
 ```
-Browser (Vercel)
+Browser
       │
-      ├── REST (HTTPS) ──────────────────► Express API (Render)
+      ├── REST /api/* ───────────────────► Vercel Serverless Functions (api/)
+      │                                    wines, wishlist, notifications,
+      │                                    user profile, webhooks, cron
+      │                                         │
+      ├── REST (HTTPS) ──────────────────► Express API (Render) (server/)
+      │                                    social: friends, chat, events
       │                                         │
       └── WebSocket (Socket.IO) ────────────────┤
                                                 │
@@ -67,8 +72,9 @@ Browser (Vercel)
                                           Clerk (Auth)
 ```
 
-- **Frontend**: React + Vite SPA, deployed to Vercel
-- **Backend**: Express.js server with Socket.IO, deployed to Render
+- **Frontend**: React + Vite SPA (TypeScript), deployed to Vercel
+- **Backend (Vercel)**: Serverless Functions in `api/` (TypeScript) — wines, wishlist, notifications, user profile, cron
+- **Backend (Render)**: Express.js server in `server/` (JavaScript) — social features + Socket.IO real-time chat
 - **Database**: MongoDB Atlas (cloud)
 - **Auth**: Clerk — frontend uses publishable key, backend verifies JWTs with secret key
 
@@ -85,11 +91,18 @@ Browser (Vercel)
 
 ### Backend Subsystems
 
-- **Wine Review System** – manages user-generated reviews
-- **Recommendation & Discovery Engine** – search and ranking logic
-- **Profile & Social System** – user relationships, friend requests, chat
-- **Inventory & Reminder System** – cellar tracking + scheduled reminders
-- **Notification System** – centralized alerts and preferences
+**Vercel Serverless (`api/`, TypeScript)**
+- **Wine Discovery** – search, filtering, and pricing (`wines.ts`)
+- **Wishlist & Price Tracking** – wishlist management with price-drop alerts (`wishlist.ts`)
+- **Notification System** – centralized alerts and preferences (`notifications.ts`)
+- **User Profile** – profile data and sync with Clerk (`me.ts`)
+- **Webhooks** – Clerk user lifecycle events (`webhooks.ts`)
+- **Cron Jobs** – scheduled price monitoring (`cron.ts`)
+
+**Express Server (`server/`, JavaScript) — deployed on Render**
+- **Social System** – user relationships, friend requests (`social/friendship/`)
+- **Real-time Chat** – Socket.IO WebSocket chat (`social/chat/`)
+- **Events** – wine tasting events (`social/event/`)
 
 ### Data & Integration Layer
 
@@ -105,12 +118,13 @@ Browser (Vercel)
 |---|---|
 | Frontend | React (Vite), TypeScript |
 | Styling | Tailwind CSS, Radix UI, shadcn/ui |
-| Backend | Node.js, Express.js |
+| Backend (Vercel) | Node.js Serverless Functions, TypeScript |
+| Backend (Render) | Node.js, Express.js, JavaScript |
 | Real-time | Socket.IO (WebSockets) |
 | Database | MongoDB Atlas (Mongoose) |
 | Auth | Clerk (Email/Password + Google OAuth) |
 | Frontend Deploy | Vercel |
-| Backend Deploy | Render |
+| Backend Deploy | Vercel (serverless) + Render (Express) |
 | API Design | RESTful JSON APIs |
 | Tooling | Prettier, GitHub |
 
@@ -150,8 +164,9 @@ Browser (Vercel)
 
 - Node.js ≥ 18
 - npm
-- MongoDB Atlas cluster
-- Clerk account (for auth keys)
+- MongoDB Atlas account
+- Clerk account
+- ScraperAPI account (for wine data)
 
 ### 1. Clone & Install
 
@@ -219,6 +234,23 @@ npm run dev
 
 ---
 
+## 🍷 Wine Data Pipeline
+
+Wine catalog data is scraped from wine.com and seeded into MongoDB.
+
+```bash
+# 1. Scrape → scripts/wine_data.json
+npm run scrape
+
+# 2. Import into MongoDB
+npm run seed
+```
+
+Requires `SCRAPERAPI_KEY` in `.env.local`. `wine_data.json` is gitignored.
+
+---
+
+## 🔗 Clerk Webhook Setup
 ## 🚢 Production Deployment
 
 ### Backend → Render
