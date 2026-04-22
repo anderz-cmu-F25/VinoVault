@@ -6,16 +6,17 @@ const {
 } = require("./socialEvent.repository");
 
 async function createSocialEvent(currentUserId, payload) {
-  const { name, location, eventDate, details } = payload;
+  const { name, location, eventDate, date, details } = payload;
+  const resolvedDate = eventDate || date;
 
-  if (!name || !location || !eventDate || !details) {
-    throw new Error("name, location, eventDate, and details are required.");
+  if (!name || !location || !resolvedDate || !details) {
+    throw new Error("name, location, date, and details are required.");
   }
 
   const event = await createEvent({
     name: name.trim(),
     location: location.trim(),
-    eventDate: new Date(eventDate),
+    eventDate: new Date(resolvedDate),
     details: details.trim(),
     hostUserId: currentUserId,
     participantUserIds: [currentUserId],
@@ -24,8 +25,12 @@ async function createSocialEvent(currentUserId, payload) {
   return event;
 }
 
-async function getAllSocialEvents() {
-  return findAllEvents();
+async function getAllSocialEvents(currentUserId) {
+  const events = await findAllEvents();
+  return events.map((event) => ({
+    ...event.toObject(),
+    joined: event.participantUserIds.includes(currentUserId),
+  }));
 }
 
 async function getSocialEventById(eventId) {

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { User, Bell } from "lucide-react";
-import { useAuth } from "@clerk/clerk-react";
-import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useUser, useAuth } from "@clerk/clerk-react";
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 
 export function ProfilePage() {
+  const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  const { user, isLoaded } = useCurrentUser();
 
   const [allowNotifications, setAllowNotifications] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -28,13 +29,10 @@ export function ProfilePage() {
         setError("");
         const token = await getToken();
 
+        const token = await getToken();
         const response = await fetch(
-          "/api/social/notification-preference",
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          }
+          `${SERVER_URL}/api/social/notification-preference`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (!response.ok) {
@@ -65,16 +63,18 @@ export function ProfilePage() {
       setSuccessMessage("");
       const token = await getToken();
 
-      const response = await fetch("/api/social/notification-preference", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify({
-          allowNotifications: nextValue,
-        }),
-      });
+      const token = await getToken();
+      const response = await fetch(
+        `${SERVER_URL}/api/social/notification-preference`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ allowNotifications: nextValue }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update notification preference.");

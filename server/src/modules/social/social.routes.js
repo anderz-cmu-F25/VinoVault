@@ -14,6 +14,7 @@ const {
 } = require("./friendship/friendship.controller");
 const { authMiddleware } = require("../../common/middleware/auth.middleware");
 const { getChatHistory } = require("./chat/chat.controller");
+const { searchUser } = require("./user/user.controller");
 const {
   createEvent,
   getEvents,
@@ -35,6 +36,7 @@ router.patch(
   updateNotificationPreference
 );
 
+router.get("/users/search", authMiddleware, searchUser);
 router.get("/friends", authMiddleware, getFriends);
 router.get("/relationships/:friendId", authMiddleware, getRelationship);
 router.post(

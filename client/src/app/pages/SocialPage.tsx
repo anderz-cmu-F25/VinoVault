@@ -14,7 +14,7 @@ import {
 import { useCurrentUser } from "../hooks/useCurrentUser";
 
 const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/social";
+  (import.meta.env.VITE_SERVER_URL || "http://localhost:3000") + "/api/social";
 
 type RelationshipState =
   | "NO_FRIENDSHIP"
