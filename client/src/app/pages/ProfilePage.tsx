@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { User, ArrowLeft, Bell } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { User, Bell } from "lucide-react";
 import { useUser, useAuth } from "@clerk/clerk-react";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 
 export function ProfilePage() {
-  const navigate = useNavigate();
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
 
@@ -29,7 +27,6 @@ export function ProfilePage() {
       try {
         setLoading(true);
         setError("");
-
         const token = await getToken();
         const response = await fetch(
           `${SERVER_URL}/api/social/notification-preference`,
@@ -51,7 +48,7 @@ export function ProfilePage() {
     }
 
     fetchPreference();
-  }, [isLoaded, user]);
+  }, [getToken, isLoaded, user]);
 
   async function handleTogglePreference() {
     if (!user || saving) return;
@@ -62,7 +59,6 @@ export function ProfilePage() {
       setSaving(true);
       setError("");
       setSuccessMessage("");
-
       const token = await getToken();
       const response = await fetch(
         `${SERVER_URL}/api/social/notification-preference`,
@@ -94,24 +90,6 @@ export function ProfilePage() {
   return (
     <main className="max-w-5xl mx-auto px-8 py-16">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <button
-            className="flex items-center gap-2 px-5 py-3 rounded-full transition-all hover:shadow-md"
-            style={{
-              backgroundColor: "transparent",
-              color: "#722F37",
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 500,
-              cursor: "pointer",
-              border: "1px solid #722F37",
-            }}
-            onClick={() => navigate("/wishlist")}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Wishlist
-          </button>
-        </div>
-
         <div
           className="rounded-[28px] p-8"
           style={{
@@ -216,8 +194,7 @@ export function ProfilePage() {
                     backgroundColor: allowNotifications ? "#722F37" : "#E0E0E0",
                     color: allowNotifications ? "#ffffff" : "#5A5A5A",
                     border: "none",
-                    cursor:
-                      loading || saving || !user ? "not-allowed" : "pointer",
+                    cursor: loading || saving || !user ? "not-allowed" : "pointer",
                     fontFamily: "'DM Sans', sans-serif",
                     fontWeight: 500,
                     minWidth: "180px",
@@ -284,7 +261,7 @@ export function ProfilePage() {
                 fontSize: "13px",
               }}
             >
-              Testing with Clerk user id: <strong>{user.id}</strong>
+              Current DB user id: <strong>{user.id}</strong>
             </div>
           )}
         </div>

@@ -1,418 +1,226 @@
 import { useState } from "react";
-
-interface Notification {
-  id: number;
-  wineName: string;
-  description: string;
-  statusText: string;
-  statusColor: string;
-  timestamp: string;
-  isRead: boolean;
-  targetMet: boolean;
-}
+import type { ApiNotification } from "./NavigationBar";
 
 interface NotificationPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  notifications: ApiNotification[];
+  onMarkRead: (id: string) => void;
+  onMarkAllRead: () => void;
+  onClearAll: () => void;
 }
 
-const initialNotifications: Notification[] = [
-  {
-    id: 1,
-    wineName: "Château Margaux 2018",
-    description: "Price dropped from $95 to $72",
-    statusText: "Your target: $75 — Target met!",
-    statusColor: "#2E7D32",
-    timestamp: "2 min ago",
-    isRead: false,
-    targetMet: true
-  },
-  {
-    id: 2,
-    wineName: "Barolo Riserva 2016",
-    description: "Price dropped from $85 to $68",
-    statusText: "Your target: $75 — Target met!",
-    statusColor: "#2E7D32",
-    timestamp: "1 hour ago",
-    isRead: false,
-    targetMet: true
-  },
-  {
-    id: 3,
-    wineName: "Dom Pérignon 2012",
-    description: "Price dropped from $295 to $285",
-    statusText: "Your target: $250 — Still watching",
-    statusColor: "#9A9A9A",
-    timestamp: "3 hours ago",
-    isRead: true,
-    targetMet: false
-  }
-];
+function timeAgo(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+}
 
-export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
+export function NotificationPanel({
+  isOpen,
+  onClose,
+  notifications,
+  onMarkRead,
+  onMarkAllRead,
+  onClearAll,
+}: NotificationPanelProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const unreadNotifications = notifications.filter(n => !n.isRead);
-  const readNotifications = notifications.filter(n => n.isRead);
-  const newCount = unreadNotifications.length;
+  const unread = notifications.filter((n) => !n.isRead);
+  const read   = notifications.filter((n) => n.isRead);
 
-  const handleMarkAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  const getDotColor = (n: ApiNotification) => {
+    if (n.isRead) return "#9A9A9A";
+    return n.currentPrice <= n.targetPrice ? "#2E7D32" : "#C9A96E";
   };
 
-  const handleNotificationClick = (id: number) => {
-    // Mark as read
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, isRead: true } : n
-    ));
-    // In a real app, this would scroll to the wine card
-    console.log("Navigate to wine card:", id);
-  };
+  const renderItem = (n: ApiNotification) => {
+    const targetMet = n.currentPrice <= n.targetPrice;
+    const description = n.previousPrice != null
+      ? `Price dropped from $${n.previousPrice.toFixed(2)} to $${n.currentPrice.toFixed(2)}`
+      : `Now at $${n.currentPrice.toFixed(2)}`;
+    const statusText = targetMet
+      ? `Your target: $${n.targetPrice.toFixed(2)} — Target met!`
+      : `Your target: $${n.targetPrice.toFixed(2)} — Still watching`;
+    const statusColor = targetMet ? "#2E7D32" : "#9A9A9A";
 
-  const getDotColor = (notification: Notification) => {
-    if (notification.isRead) return "#9A9A9A"; // Gray for read
-    if (notification.targetMet) return "#2E7D32"; // Green for unread + target met
-    return "#C9A96E"; // Amber/gold for unread + target not met
+    const handleClick = () => {
+      onMarkRead(n._id);
+      if (n.wineUrl) {
+        window.open(n.wineUrl, "_blank", "noopener,noreferrer");
+      }
+    };
+
+    return (
+      <div
+        key={n._id}
+        className="px-5 py-4 transition-all cursor-pointer relative"
+        style={{
+          backgroundColor: hoveredId === n._id
+            ? (n.isRead ? '#F9F9F9' : '#F0F9F1')
+            : (n.isRead ? '#ffffff' : '#F5FBF5'),
+        }}
+        onClick={handleClick}
+        onMouseEnter={() => setHoveredId(n._id)}
+        onMouseLeave={() => setHoveredId(null)}
+      >
+        <div className="flex gap-3">
+          <div className="flex-shrink-0 pt-1">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getDotColor(n) }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h4
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: '13px',
+                  fontWeight: n.isRead ? 400 : 700,
+                  color: '#2A2A2A',
+                  lineHeight: '1.4',
+                }}
+              >
+                {n.wineName}
+              </h4>
+              {hoveredId === n._id && n.wineUrl && (
+                <span
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '12px',
+                    color: '#722F37',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  View wine ›
+                </span>
+              )}
+            </div>
+            <p className="mb-1" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#5A5A5A', lineHeight: '1.4' }}>
+              {description}
+            </p>
+            <p className="mb-1.5" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: statusColor, lineHeight: '1.4' }}>
+              {statusText}
+            </p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#9A9A9A' }}>
+              {timeAgo(n.createdAt)}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <>
-      {/* Invisible overlay to close dropdown when clicking outside */}
-      <div 
-        className="fixed inset-0"
-        style={{ zIndex: 999 }}
-        onClick={onClose}
-      />
-      
-      {/* Notification Panel */}
-      <div 
+      {/* Overlay */}
+      <div className="fixed inset-0" style={{ zIndex: 999 }} onClick={onClose} />
+
+      {/* Panel */}
+      <div
         className="absolute right-0 top-full mt-2 bg-white flex flex-col"
-        style={{ 
+        style={{
           width: '360px',
           maxHeight: '420px',
           borderRadius: '12px',
           zIndex: 1000,
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
+          boxShadow: '0 10px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08)',
         }}
       >
-        {/* Header - Fixed */}
-        <div 
+        {/* Header */}
+        <div
           className="px-5 py-4 border-b flex items-center justify-between flex-shrink-0"
           style={{ borderColor: '#F0F0F0' }}
         >
-          <h3 
-            style={{ 
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 600,
-              color: '#2A2A2A',
-              fontSize: '15px'
-            }}
-          >
+          <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, color: '#2A2A2A', fontSize: '15px' }}>
             Notifications
           </h3>
           <div className="flex items-center gap-2.5">
-            <button
-              onClick={handleMarkAllRead}
-              className="transition-opacity"
-              style={{ 
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: '12px',
-                color: '#757575',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              Mark all read
-            </button>
-            {newCount > 0 && (
-              <div 
-                className="px-2 py-0.5 rounded-full"
-                style={{ 
-                  backgroundColor: '#E8F5E9',
-                  color: '#2E7D32',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 600,
-                  fontSize: '11px'
-                }}
+            {unread.length > 0 && (
+              <button
+                onClick={onMarkAllRead}
+                className="transition-opacity"
+                style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#757575', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.6'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
               >
-                {newCount} new
+                Mark all read
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={onClearAll}
+                className="transition-opacity"
+                style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#C4494F', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.6'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+              >
+                Clear all
+              </button>
+            )}
+            {unread.length > 0 && (
+              <div
+                className="px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: '#E8F5E9', color: '#2E7D32', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '11px' }}
+              >
+                {unread.length} new
               </div>
             )}
           </div>
         </div>
 
-        {/* Notification List - Scrollable */}
-        <div 
-          className="overflow-y-auto flex-1"
-          style={{ 
-            maxHeight: '340px'
-          }}
-        >
-          {/* New Section */}
-          {unreadNotifications.length > 0 && (
+        {/* List */}
+        <div className="overflow-y-auto flex-1" style={{ maxHeight: '340px' }}>
+          {notifications.length === 0 ? (
+            <div
+              className="px-5 py-10 text-center"
+              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#9A9A9A' }}
+            >
+              No notifications yet.<br />
+              <span style={{ fontSize: '12px' }}>You'll hear from us when a price drops.</span>
+            </div>
+          ) : (
             <>
-              <div 
-                className="px-5 py-2"
-                style={{ 
-                  backgroundColor: '#FAFAFA'
-                }}
-              >
-                <span 
-                  style={{ 
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    color: '#9A9A9A',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  New
-                </span>
-              </div>
-              {unreadNotifications.map((notification) => (
-                <div 
-                  key={notification.id}
-                  className="px-5 py-4 transition-all cursor-pointer relative"
-                  style={{ 
-                    backgroundColor: hoveredId === notification.id 
-                      ? '#F0F9F1' 
-                      : '#F5FBF5'
-                  }}
-                  onClick={() => handleNotificationClick(notification.id)}
-                  onMouseEnter={() => setHoveredId(notification.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                >
-                  <div className="flex gap-3">
-                    {/* Status Dot */}
-                    <div className="flex-shrink-0 pt-1">
-                      <div 
-                        className="w-2 h-2 rounded-full"
-                        style={{ 
-                          backgroundColor: getDotColor(notification)
-                        }}
-                      />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 
-                          style={{ 
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            color: '#2A2A2A',
-                            lineHeight: '1.4'
-                          }}
-                        >
-                          {notification.wineName}
-                        </h4>
-                        {hoveredId === notification.id && (
-                          <span 
-                            style={{ 
-                              fontFamily: "'DM Sans', sans-serif",
-                              fontSize: '12px',
-                              color: '#722F37',
-                              fontWeight: 500,
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            View wine ›
-                          </span>
-                        )}
-                      </div>
-                      <p 
-                        className="mb-1"
-                        style={{ 
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '12px',
-                          color: '#5A5A5A',
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {notification.description}
-                      </p>
-                      <p 
-                        className="mb-1.5"
-                        style={{ 
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '12px',
-                          color: notification.statusColor,
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {notification.statusText}
-                      </p>
-                      <p 
-                        style={{ 
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '11px',
-                          color: '#9A9A9A'
-                        }}
-                      >
-                        {notification.timestamp}
-                      </p>
-                    </div>
+              {unread.length > 0 && (
+                <>
+                  <div className="px-5 py-2" style={{ backgroundColor: '#FAFAFA' }}>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                      New
+                    </span>
                   </div>
-                </div>
-              ))}
-            </>
-          )}
-
-          {/* Earlier Section */}
-          {readNotifications.length > 0 && (
-            <>
-              <div 
-                className="px-5 py-2"
-                style={{ 
-                  backgroundColor: '#FAFAFA'
-                }}
-              >
-                <span 
-                  style={{ 
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    color: '#9A9A9A',
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  Earlier
-                </span>
-              </div>
-              {readNotifications.map((notification) => (
-                <div 
-                  key={notification.id}
-                  className="px-5 py-4 transition-all cursor-pointer relative"
-                  style={{ 
-                    backgroundColor: hoveredId === notification.id 
-                      ? '#F9F9F9' 
-                      : '#ffffff'
-                  }}
-                  onClick={() => handleNotificationClick(notification.id)}
-                  onMouseEnter={() => setHoveredId(notification.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                >
-                  <div className="flex gap-3">
-                    {/* Status Dot */}
-                    <div className="flex-shrink-0 pt-1">
-                      <div 
-                        className="w-2 h-2 rounded-full"
-                        style={{ 
-                          backgroundColor: getDotColor(notification)
-                        }}
-                      />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 
-                          style={{ 
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontSize: '13px',
-                            fontWeight: 400,
-                            color: '#2A2A2A',
-                            lineHeight: '1.4'
-                          }}
-                        >
-                          {notification.wineName}
-                        </h4>
-                        {hoveredId === notification.id && (
-                          <span 
-                            style={{ 
-                              fontFamily: "'DM Sans', sans-serif",
-                              fontSize: '12px',
-                              color: '#722F37',
-                              fontWeight: 500,
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            View wine ›
-                          </span>
-                        )}
-                      </div>
-                      <p 
-                        className="mb-1"
-                        style={{ 
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '12px',
-                          color: '#5A5A5A',
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {notification.description}
-                      </p>
-                      <p 
-                        className="mb-1.5"
-                        style={{ 
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '12px',
-                          color: notification.statusColor,
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {notification.statusText}
-                      </p>
-                      <p 
-                        style={{ 
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: '11px',
-                          color: '#9A9A9A'
-                        }}
-                      >
-                        {notification.timestamp}
-                      </p>
-                    </div>
+                  {unread.map(renderItem)}
+                </>
+              )}
+              {read.length > 0 && (
+                <>
+                  <div className="px-5 py-2" style={{ backgroundColor: '#FAFAFA' }}>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                      Earlier
+                    </span>
                   </div>
-                </div>
-              ))}
+                  {read.map(renderItem)}
+                </>
+              )}
             </>
           )}
         </div>
 
-        {/* Footer - Fixed */}
-        <div 
+        {/* Footer */}
+        <div
           className="px-5 py-3 border-t text-center flex-shrink-0 bg-white"
-          style={{ 
-            borderColor: '#F0F0F0',
-            borderBottomLeftRadius: '12px',
-            borderBottomRightRadius: '12px'
-          }}
+          style={{ borderColor: '#F0F0F0', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}
         >
-          <a 
-            href="#all-notifications"
-            className="transition-opacity inline-block"
-            style={{ 
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: '13px',
-              color: '#722F37',
-              fontWeight: 500,
-              textDecoration: 'none',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = '0.7';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = '1';
-            }}
+          <span
+            style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#C0C0C0', fontWeight: 500 }}
           >
-            View all notifications
-          </a>
+            Prices checked daily at 08:00 UTC
+          </span>
         </div>
       </div>
     </>
