@@ -4,6 +4,21 @@ const {
   findAllEvents,
   saveEvent,
 } = require("./socialEvent.repository");
+const { createClerkClient } = require("@clerk/backend");
+
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
+
+async function fetchUsernameMap(userIds) {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  if (!unique.length) return {};
+  const { data: users } = await clerkClient.users.getUserList({
+    userId: unique,
+    limit: unique.length,
+  });
+  return Object.fromEntries(users.map((u) => [u.id, u.username || null]));
+}
 
 async function createSocialEvent(currentUserId, payload) {
   const { name, location, eventDate, date, details } = payload;
@@ -27,8 +42,10 @@ async function createSocialEvent(currentUserId, payload) {
 
 async function getAllSocialEvents(currentUserId) {
   const events = await findAllEvents();
+  const usernameMap = await fetchUsernameMap(events.map((e) => e.hostUserId));
   return events.map((event) => ({
     ...event.toObject(),
+    hostUsername: usernameMap[event.hostUserId] || null,
     joined: event.participantUserIds.includes(currentUserId),
   }));
 }
@@ -40,7 +57,11 @@ async function getSocialEventById(eventId) {
     throw new Error("Event not found.");
   }
 
-  return event;
+  const usernameMap = await fetchUsernameMap([event.hostUserId]);
+  return {
+    ...event.toObject(),
+    hostUsername: usernameMap[event.hostUserId] || null,
+  };
 }
 
 async function joinSocialEvent(currentUserId, eventId) {
