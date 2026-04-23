@@ -183,21 +183,50 @@ cd client && npm install
 
 ### 2. Environment Variables
 
-**Backend** — create a `.env` file inside `server/`:
+There are **three** env files to create for local development:
+
+---
+
+**Root `.env.local`** — used by Vercel serverless functions (`api/`) and the wine data pipeline:
 
 ```bash
-cp .env.example server/.env
+cp .env.example .env.local
 ```
-
-Fill in these values in `server/.env`:
 
 | Variable | Description |
 |---|---|
 | `MONGODB_URI` | MongoDB Atlas connection string |
+| `PORT` | `3001` for local Vercel dev server |
 | `CLERK_SECRET_KEY` | From Clerk Dashboard → API Keys (`sk_test_...`) |
 | `CLERK_WEBHOOK_SECRET` | From Clerk Dashboard → Webhooks (`whsec_...`) |
+| `CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Same as above — exposed to Vite |
 | `FRONTEND_URL` | `http://localhost:5173` for local dev |
-| `PORT` | `3000` (optional, defaults to 3000) |
+| `SCRAPERAPI_KEY` | From [scraperapi.com](https://www.scraperapi.com) — used for wine scraping |
+| `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) |
+| `SMTP_PORT` | SMTP port (e.g. `587`) |
+| `SMTP_USER` | SMTP login email |
+| `SMTP_PASS` | SMTP app password |
+| `SMTP_FROM` | Sender display name + email |
+| `CRON_SECRET` | Random secret to protect cron endpoints |
+
+---
+
+**Express server** — create a `.env` file inside `server/`:
+
+```bash
+cp server/.env.example server/.env
+```
+
+| Variable | Description |
+|---|---|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `PORT` | `3000` (Express server port) |
+| `CLERK_SECRET_KEY` | From Clerk Dashboard → API Keys (`sk_test_...`) |
+| `CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
+| `FRONTEND_URL` | `http://localhost:5173` for local dev |
+
+---
 
 **Frontend** — create a `.env.local` file inside `client/`:
 
@@ -205,32 +234,35 @@ Fill in these values in `server/.env`:
 cp client/.env.example client/.env.local
 ```
 
-Fill in these values in `client/.env.local`:
-
 | Variable | Description |
 |---|---|
 | `VITE_CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
-| `VITE_SERVER_URL` | `http://localhost:3000` for local dev |
+| `VITE_SERVER_URL` | `http://localhost:3000` for local dev (Express server) |
+| `CLERK_SECRET_KEY` | Injected by Vercel CLI for serverless functions |
+| `MONGODB_URI` | Injected by Vercel CLI for serverless functions |
+| `VERCEL_OIDC_TOKEN` | Auto-populated by Vercel CLI — leave blank locally |
 
 > Get the actual secret values from a teammate — never commit `.env` or `.env.local` to the repo.
 
 ### 3. Run Locally (two terminals)
 
-**Terminal 1 — Backend:**
+**Terminal 1 — Express server (social / chat):**
 
 ```bash
-# From repo root
+cd server
 npm run dev
 # Server starts at http://localhost:3000
 ```
 
-**Terminal 2 — Frontend:**
+**Terminal 2 — Frontend (Vite) and Wishlist:**
 
 ```bash
-cd client
-npm run dev
+npm run dev:full
 # App opens at http://localhost:5173
+# http://localhost:3001 for wishlist
 ```
+
+> The Vercel serverless functions (`api/`) are proxied through Vite in local dev — no separate process needed.
 
 ---
 
@@ -246,7 +278,7 @@ npm run scrape
 npm run seed
 ```
 
-Requires `SCRAPERAPI_KEY` in `.env.local`. `wine_data.json` is gitignored.
+Requires `SCRAPERAPI_KEY` in the root `.env.local`. `wine_data.json` is gitignored.
 
 ---
 
@@ -324,4 +356,4 @@ Copy the signing secret → add as `CLERK_WEBHOOK_SECRET` on Render.
 
 ## 👥 Team
 
-**Team 8**
+**Team8**

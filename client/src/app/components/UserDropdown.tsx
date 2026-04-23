@@ -39,8 +39,7 @@ export function UserDropdown() {
     { label: "My Profile", icon: User, path: "/profile" },
     { label: "My Wishlist", icon: Heart, path: "/wishlist" },
     { label: "My Cellar", icon: Wine, path: "/cellar" },
-    { label: "Notification Settings", icon: Bell, path: "/settings/notifications" },
-    { label: "Account Settings", icon: Settings, path: "/settings/account" },
+    { label: "My Reviews", icon: Star, path: "/reviews" },
     { label: "Social", icon: MessageCircle, path: "/social" },
   ];
 

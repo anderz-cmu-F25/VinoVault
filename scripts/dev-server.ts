@@ -10,6 +10,7 @@ import path from "path";
 import express from "express";
 
 dotenv.config({ path: path.join(process.cwd(), ".env.local") });
+dotenv.config({ path: path.join(process.cwd(), ".env") });
 
 import winesHandlerMod from "../api/wines";
 import wishlistHandlerMod from "../api/wishlist";
