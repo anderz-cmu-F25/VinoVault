@@ -4,6 +4,7 @@ const { clerkMiddleware } = require("@clerk/express");
 const socialRoutes = require("./modules/social/social.routes");
 const inventoryRoutes = require("./modules/inventory/inventory.routes");
 const reviewRoutes = require("./modules/review/review.routes");
+const discoveryRoutes = require("./modules/discovery/discovery.routes");
 const userRoutes = require("./modules/user/user.routes");
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(clerkMiddleware());
 app.use("/api/social", socialRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/discovery", discoveryRoutes);
 app.use("/api/me", userRoutes);
 
 app.use((err, req, res, next) => {
