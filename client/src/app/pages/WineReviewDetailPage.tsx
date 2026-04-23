@@ -7,6 +7,7 @@ import type { ReviewModalInitialValues } from "../components/ReviewModal";
 import { ReviewCard } from "../components/ReviewCard";
 import type { Review } from "../components/ReviewCard";
 import { StarRating } from "../components/StarRating";
+import { DeleteReviewModal } from "../components/DeleteReviewModal";
 
 const API_BASE =
   (import.meta.env.VITE_SERVER_URL || "http://localhost:3000") + "/api/reviews";
@@ -49,6 +50,7 @@ export function WineReviewDetailPage() {
 
   const [writeOpen, setWriteOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<ReviewModalInitialValues | null>(null);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
   const fetchReviews = useCallback(async () => {
     if (!wineId) return;
@@ -76,8 +78,14 @@ export function WineReviewDetailPage() {
     fetchReviews();
   }, [fetchReviews]);
 
-  const handleDelete = async (reviewId: string) => {
-    if (!window.confirm("Delete this review? This can't be undone.")) return;
+  const handleDelete = (reviewId: string) => {
+    setDeletingReviewId(reviewId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingReviewId) return;
+    const reviewId = deletingReviewId;
+    setDeletingReviewId(null);
     try {
       const token = await getToken();
       const res = await fetch(`${API_BASE}/${reviewId}`, {
@@ -384,6 +392,12 @@ export function WineReviewDetailPage() {
         onClose={() => setEditingReview(null)}
         onSaved={() => fetchReviews()}
         initialValues={editingReview || undefined}
+      />
+
+      <DeleteReviewModal
+        isOpen={!!deletingReviewId}
+        onCancel={() => setDeletingReviewId(null)}
+        onConfirm={handleConfirmDelete}
       />
     </main>
   );
