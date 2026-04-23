@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
-import { Heart, Wine, LogOut, MessageCircle, Star, Pencil, Check, X } from 'lucide-react'
+import { Compass, Heart, Wine, LogOut, MessageCircle, Star, Pencil, Check, X } from 'lucide-react'
 
 import { useNavigate } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
@@ -72,6 +72,7 @@ export function UserDropdown() {
   }
 
   const menuItems = [
+    { label: 'Discover', icon: Compass, path: '/discover' },
     { label: 'My Wishlist', icon: Heart, path: '/wishlist' },
     { label: 'My Cellar', icon: Wine, path: '/cellar' },
     { label: 'My Reviews', icon: Star, path: '/reviews' },
