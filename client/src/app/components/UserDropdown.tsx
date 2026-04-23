@@ -55,6 +55,10 @@ export function UserDropdown() {
       setIsEditingUsername(false);
       return;
     }
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      setUsernameError("Username can only contain letters, numbers, - or _");
+      return;
+    }
     setIsSavingUsername(true);
     setUsernameError("");
     try {
