@@ -14,7 +14,7 @@ export interface IWine extends Document {
 
 const WineSchema = new Schema<IWine>(
   {
-    wineId: { type: String, required: true, unique: true, index: true },
+    wineId: { type: String, required: true, unique: true, index: true, sparse: true },
     name: { type: String, required: true },
     vintage: { type: Schema.Types.Mixed, default: null },
     region: { type: String, default: null },
