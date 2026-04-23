@@ -1,6 +1,8 @@
 const {
   findAllByUserId,
   findEntryById,
+  findReadyEntriesByUserId,
+  findUserByEmail,
   createEntry,
   updateEntry,
   deleteEntry,
@@ -72,6 +74,16 @@ async function searchWinesCatalog(query) {
   return searchWines(query.trim());
 }
 
+/**
+ * Returns all "ready to drink" cellar entries for a given user email.
+ * Used by the cron job to include a reminder in the daily notification email.
+ */
+async function getReadyWinesByEmail(email) {
+  const user = await findUserByEmail(email);
+  if (!user) return [];
+  return findReadyEntriesByUserId(user.clerkId);
+}
+
 module.exports = {
   getCellar,
   addFromCatalog,
@@ -79,4 +91,5 @@ module.exports = {
   editEntry,
   removeEntry,
   searchWinesCatalog,
+  getReadyWinesByEmail,
 };
