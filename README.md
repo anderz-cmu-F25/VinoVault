@@ -324,4 +324,4 @@ Copy the signing secret → add as `CLERK_WEBHOOK_SECRET` on Render.
 
 ## 👥 Team
 
-**Team 8**
+**Team8**
