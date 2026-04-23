@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const wineSchema = new mongoose.Schema(
   {
-    wineId: { type: String, required: true, unique: true, index: true },
+    wineId: { type: String, required: true, unique: true, index: true, sparse: true },
     name: { type: String, required: true },
     region: { type: String, default: "" },
     vintage: { type: String, default: "" },
