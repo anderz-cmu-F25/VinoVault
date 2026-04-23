@@ -3,6 +3,8 @@ const repository = require('./discovery.repository')
 
 const service = new DiscoveryService()
 
+// Main discovery endpoint: merge query params with the authenticated user
+// and delegate all recommendation decisions to the service layer.
 async function discoverWines(req, res, next) {
   try {
     const userId = req.auth.userId
@@ -19,6 +21,7 @@ async function discoverWines(req, res, next) {
   }
 }
 
+// Exposes the catalog's available regions so the frontend can populate filters.
 async function getRegions(_req, res, next) {
   try {
     const regions = await repository.listRegions()

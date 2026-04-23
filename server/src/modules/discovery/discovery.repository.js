@@ -15,6 +15,8 @@ function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// Translate query params into a Mongo filter shared by browse, search,
+// and personalized discovery flows.
 function buildWineFilter(input = {}) {
   const filter = { name: { $exists: true, $nin: [null, ''] } }
   const search = String(input.search || input.q || '').trim()
@@ -41,6 +43,7 @@ function buildWineFilter(input = {}) {
   return filter
 }
 
+// Basic paginated wine lookup used when a caller wants raw filtered results.
 async function findWines(input = {}) {
   const page = Math.max(1, Number(input.page || 1) || 1)
   const limit = Math.min(60, Math.max(1, Number(input.limit || 24) || 24))
@@ -68,6 +71,7 @@ async function findWines(input = {}) {
   }
 }
 
+// Fetch a bounded candidate set that strategies can score in memory.
 async function findCandidateWines(input = {}) {
   const limit = Math.min(1000, Math.max(24, Number(input.candidateLimit || 160) || 160))
   return WineModel.find(buildWineFilter(input))
@@ -76,6 +80,7 @@ async function findCandidateWines(input = {}) {
     .lean()
 }
 
+// Return all distinct non-empty regions so the UI can offer region filters.
 async function listRegions() {
   const regions = await WineModel.distinct('region', {
     region: { $nin: [null, ''] },
@@ -85,6 +90,8 @@ async function listRegions() {
     .sort((a, b) => a.localeCompare(b))
 }
 
+// Aggregate review-derived signals per wine so strategies can rank by
+// community sentiment instead of relying only on catalog metadata.
 async function getReviewStats(wineIds) {
   if (!wineIds.length) return new Map()
 
@@ -125,6 +132,7 @@ async function getReviewStats(wineIds) {
   )
 }
 
+// Resolve the app user document that corresponds to the authenticated Clerk user.
 async function getUserProfile(userId) {
   const User =
     mongoose.models.User ||
@@ -135,6 +143,7 @@ async function getUserProfile(userId) {
   return User.findOne({ clerkId: userId }).lean()
 }
 
+// Collect cross-feature behavior signals that power personalized recommendations.
 async function getUserSignals(userId) {
   const [reviews, cellarEntries, user] = await Promise.all([
     ReviewModel.find({ userId }).select('wineId wineName rating notes').lean(),

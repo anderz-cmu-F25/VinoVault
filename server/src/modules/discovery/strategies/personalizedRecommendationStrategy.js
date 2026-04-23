@@ -6,6 +6,8 @@ class PersonalizedRecommendationStrategy extends FilterRankingStrategy {
     super(repository)
   }
 
+  // Turn the user's reviews, cellar entries, and wishlist activity into
+  // lightweight preference signals that can bias ranking.
   buildPreferences(signals) {
     const regions = new Map()
     const buckets = new Map()
@@ -47,6 +49,7 @@ class PersonalizedRecommendationStrategy extends FilterRankingStrategy {
     return { regions, buckets, notes, likedWineIds, wishlistWineIds }
   }
 
+  // Start from the generic browse score, then adjust it with user-specific signals.
   scoreWine(wine, input, preferences) {
     let score = super.scoreWine(wine)
     const price = currentPrice(wine)
@@ -77,9 +80,10 @@ class PersonalizedRecommendationStrategy extends FilterRankingStrategy {
     return score
   }
 
+  // Generate a recommendation explanation tied to the strongest personal signal.
   reasonFor(wine, preferences) {
     if (wine.region && preferences.regions.has(wine.region)) {
-      return `Similar to wines from ${wine.region} in your cellar`
+      return `Similar to wines from ${wine.region} you've saved or reviewed`
     }
     if (preferences.buckets.has(priceBucket(currentPrice(wine)))) {
       return 'Fits the price range you tend to watch'
@@ -95,6 +99,7 @@ class PersonalizedRecommendationStrategy extends FilterRankingStrategy {
     return 'Recommended from your wine activity'
   }
 
+  // Personalized discovery: combine catalog quality with inferred user taste.
   async recommend(input) {
     const page = Math.max(1, Number(input.page || 1) || 1)
     const limit = Math.min(60, Math.max(1, Number(input.limit || 24) || 24))

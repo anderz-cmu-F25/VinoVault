@@ -9,10 +9,12 @@ class DiscoveryService {
     this.strategy = new FilterRankingStrategy(this.repository)
   }
 
+  // Swap the active recommendation strategy at runtime.
   setStrategy(strategy) {
     this.strategy = strategy
   }
 
+  // Pick the recommendation mode that best matches the request intent.
   chooseStrategy(input) {
     const strategyName = String(input.strategy || '').trim()
 
@@ -27,6 +29,8 @@ class DiscoveryService {
     return new FilterRankingStrategy(this.repository)
   }
 
+  // Run discovery through the selected strategy and attach shared metadata
+  // that the UI uses regardless of recommendation mode.
   async recommend(input) {
     this.setStrategy(this.chooseStrategy(input))
     const result = await this.strategy.recommend(input)
