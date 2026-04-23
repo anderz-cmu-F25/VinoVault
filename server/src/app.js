@@ -3,6 +3,7 @@ const cors = require("cors");
 const { clerkMiddleware } = require("@clerk/express");
 const socialRoutes = require("./modules/social/social.routes");
 const inventoryRoutes = require("./modules/inventory/inventory.routes");
+const reviewRoutes = require("./modules/review/review.routes");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(clerkMiddleware());
 
 app.use("/api/social", socialRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
