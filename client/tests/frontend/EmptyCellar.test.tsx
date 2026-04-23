@@ -12,7 +12,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
-import { EmptyCellar } from '../../client/src/app/components/EmptyCellar'
+import { EmptyCellar } from '../../src/app/components/EmptyCellar'
 
 describe('EmptyCellar', () => {
   it('renders the empty cellar heading', () => {

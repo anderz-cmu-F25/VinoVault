@@ -21,10 +21,10 @@
  * fetch is mocked globally to control API responses.
  */
 
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { CellarPage } from '../../client/src/app/pages/CellarPage'
+import { CellarPage } from '../../src/app/pages/CellarPage'
 
 // Mock Clerk — stable getToken reference so useCallback doesn't re-create fetchCellar on every render
 const mockGetToken = vi.fn().mockResolvedValue('mock_token')
@@ -33,7 +33,7 @@ vi.mock('@clerk/clerk-react', () => ({
 }))
 
 // Mock child components that are tested separately to keep page tests focused
-vi.mock('../../client/src/app/components/AddCellarEntryModal', () => ({
+vi.mock('../../src/app/components/AddCellarEntryModal', () => ({
   AddCellarEntryModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
       <div data-testid="add-modal">
