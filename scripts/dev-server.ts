@@ -16,6 +16,7 @@ import winesHandlerMod from "../api/wines";
 import wishlistHandlerMod from "../api/wishlist";
 import notificationsHandlerMod from "../api/notifications";
 import meHandlerMod from "../api/me";
+import meUsernameHandlerMod from "../api/me/username";
 
 const app = express();
 app.use(express.json());
@@ -29,6 +30,7 @@ function fn(mod: any): AnyHandler {
 const mount = (handler: AnyHandler) =>
   (req: express.Request, res: express.Response) => handler(req, res);
 
+app.all("/api/me/username", mount(fn(meUsernameHandlerMod)));
 app.all("/api/me", mount(fn(meHandlerMod)));
 app.all("/api/wines", mount(fn(winesHandlerMod)));
 app.all("/api/wishlist", mount(fn(wishlistHandlerMod)));

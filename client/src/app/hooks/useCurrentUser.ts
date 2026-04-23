@@ -15,44 +15,61 @@ export function useCurrentUser() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadCurrentUser() {
-      if (!isAuthLoaded || !isUserLoaded) return;
+  async function loadCurrentUser() {
+    if (!isAuthLoaded || !isUserLoaded) return;
 
-      if (!isSignedIn) {
-        setUser(null);
-        setError("");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError("");
-
-        const token = await getToken();
-        const response = await fetch("/api/me", {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        });
-
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || "Failed to load current user.");
-        }
-
-        setUser(result.data ?? null);
-      } catch (err: any) {
-        setUser(null);
-        setError(err.message || "Failed to load current user.");
-      } finally {
-        setIsLoading(false);
-      }
+    if (!isSignedIn) {
+      setUser(null);
+      setError("");
+      setIsLoading(false);
+      return;
     }
 
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const token = await getToken();
+      const response = await fetch("/api/me", {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to load current user.");
+      }
+
+      setUser(result.data ?? null);
+    } catch (err: any) {
+      setUser(null);
+      setError(err.message || "Failed to load current user.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
     loadCurrentUser();
   }, [getToken, isAuthLoaded, isSignedIn, isUserLoaded]);
+
+  async function updateUsername(username: string): Promise<void> {
+    const token = await getToken();
+    const response = await fetch("/api/me/username", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+      body: JSON.stringify({ username }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to update username.");
+    }
+    setUser(result.data ?? null);
+  }
 
   return {
     user,
@@ -60,5 +77,6 @@ export function useCurrentUser() {
     isLoading,
     isLoaded: isAuthLoaded && isUserLoaded && !isLoading,
     error,
+    updateUsername,
   };
 }
