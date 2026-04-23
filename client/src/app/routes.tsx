@@ -9,6 +9,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { SocialPage } from "./pages/SocialPage";
 import { ChatRoomPage } from "./pages/ChatRoomPage";
+import { ReviewPage } from "./pages/ReviewPage";
+import { WineReviewDetailPage } from "./pages/WineReviewDetailPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -54,6 +56,14 @@ export const router = createBrowserRouter([
       {
         path: "cellar",
         element: <ProtectedRoute><CellarPage /></ProtectedRoute>
+      },
+      {
+        path: "reviews",
+        element: <ProtectedRoute><ReviewPage /></ProtectedRoute>
+      },
+      {
+        path: "reviews/wine/:wineId",
+        element: <ProtectedRoute><WineReviewDetailPage /></ProtectedRoute>
       },
       {
         path: "profile",

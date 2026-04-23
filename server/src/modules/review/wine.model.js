@@ -1,0 +1,23 @@
+const mongoose = require("mongoose");
+
+const wineSchema = new mongoose.Schema(
+  {
+    wineId: { type: String, required: true, unique: true, index: true },
+    name: { type: String, required: true },
+    region: { type: String, default: "" },
+    vintage: { type: String, default: "" },
+    varietal: { type: String, default: "" },
+    regularPrice: { type: Number, default: null },
+    salePrice: { type: Number, default: null },
+    stock: { type: Number, default: null },
+    rating: { type: String, default: "0.0" },
+    wineUrl: { type: String, default: "" },
+  },
+  { timestamps: true }
+);
+
+wineSchema.index({ name: "text" });
+
+const WineModel = mongoose.models.Wine || mongoose.model("Wine", wineSchema);
+
+module.exports = WineModel;

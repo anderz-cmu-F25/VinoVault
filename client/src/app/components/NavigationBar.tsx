@@ -10,6 +10,7 @@ export function NavigationBar() {
     { name: "Discover", path: "/discover" },
     { name: "Wishlist", path: "/wishlist" },
     { name: "Cellar", path: "/cellar" },
+    { name: "Review", path: "/reviews" },
     { name: "Profile", path: "/profile" },
     { name: "Social", path: "/social" },
   ];
@@ -35,7 +36,7 @@ export function NavigationBar() {
           <div className="hidden md:flex items-center space-x-10">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
-              const isGrayedOut = !isSignedIn && (link.name === "Discover" || link.name === "Cellar" || link.name === "Profile");
+              const isGrayedOut = !isSignedIn && (link.name === "Discover" || link.name === "Cellar" || link.name === "Profile" || link.name === "Review");
 
               return (
                 <Link
