@@ -9,6 +9,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { SocialPage } from "./pages/SocialPage";
 import { ChatRoomPage } from "./pages/ChatRoomPage";
+import { ReviewPage } from "./pages/ReviewPage";
+import { WineReviewDetailPage } from "./pages/WineReviewDetailPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -114,6 +116,14 @@ export const router = createBrowserRouter([
           {
             path: "cellar",
             element: <AuthRoute requireSignedIn={true}><CellarPage /></AuthRoute>
+          },
+          {
+            path: "reviews",
+            element: <AuthRoute requireSignedIn={true}><ReviewPage /></AuthRoute>
+          },
+          {
+            path: "reviews/wine/:wineId",
+            element: <AuthRoute requireSignedIn={true}><WineReviewDetailPage /></AuthRoute>
           },
           {
             path: "profile",
