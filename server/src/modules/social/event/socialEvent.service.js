@@ -50,7 +50,7 @@ async function getAllSocialEvents(currentUserId) {
   }));
 }
 
-async function getSocialEventById(eventId) {
+async function getSocialEventById(eventId, currentUserId) {
   const event = await findEventById(eventId);
 
   if (!event) {
@@ -61,6 +61,9 @@ async function getSocialEventById(eventId) {
   return {
     ...event.toObject(),
     hostUsername: usernameMap[event.hostUserId] || null,
+    joined: currentUserId
+      ? event.participantUserIds.includes(currentUserId)
+      : false,
   };
 }
 
