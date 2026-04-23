@@ -36,6 +36,7 @@ async function findOrCreateWine(wineData) {
   if (existing) return existing;
 
   return WineModel.create({
+    wineId: `CELLAR_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     wineName: wineName.trim(),
     winery: winery ? winery.trim() : undefined,
     type: wineData.type,
