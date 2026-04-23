@@ -17,6 +17,7 @@ import { Wishlist } from "./models/Wishlist";
 import { Wine } from "./models/Wine";
 import { Notification } from "./models/Notification";
 import { sendPriceAlertEmail } from "./email";
+import { fetchWinePrice } from "./priceFetcher";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -90,12 +91,62 @@ export class NotificationObserver implements PriceDropObserver {
   }
 }
 
-// ── Main monitor function ─────────────────────────────────────────────────────
+// ── Price refresh ─────────────────────────────────────────────────────────────
 
 export interface MonitorResult {
   checked: number;
   alerted: number;
+  refreshed: number;
+  refreshFailed: number;
 }
+
+const REFRESH_DELAY_MS = 800;
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Fetches the latest CA price for each unique wineId and writes it back
+ * to Wine.salePrice / Wine.regularPrice in MongoDB.
+ */
+async function refreshWinePrices(wineIds: string[]): Promise<{ refreshed: number; refreshFailed: number }> {
+  let refreshed = 0;
+  let refreshFailed = 0;
+
+  for (const wineId of wineIds) {
+    const wine = await Wine.findOne({ wineId });
+    if (!wine) {
+      console.log(`[monitor] Wine not found for wineId "${wineId}", skipping`);
+      continue;
+    }
+    if (!wine.wineUrl) {
+      console.log(`[monitor] No wineUrl for "${wine.name}", skipping refresh`);
+      continue;
+    }
+
+    console.log(`[monitor] Refreshing "${wine.name}" …`);
+    const prices = await fetchWinePrice(wine.wineUrl);
+
+    if (prices) {
+      await Wine.updateOne(
+        { wineId },
+        { $set: { regularPrice: prices.regularPrice, salePrice: prices.salePrice } }
+      );
+      console.log(`[monitor] Updated "${wine.name}" — regular: $${prices.regularPrice}, sale: $${prices.salePrice}`);
+      refreshed++;
+    } else {
+      console.warn(`[monitor] Refresh failed for "${wine.name}", keeping existing price`);
+      refreshFailed++;
+    }
+
+    await sleep(REFRESH_DELAY_MS);
+  }
+
+  return { refreshed, refreshFailed };
+}
+
+// ── Main monitor function ─────────────────────────────────────────────────────
 
 export async function runMonitor(): Promise<MonitorResult> {
   await connectDB();
@@ -104,7 +155,11 @@ export async function runMonitor(): Promise<MonitorResult> {
   const pendingItems = await Wishlist.find({}).lean();
   console.log(`[monitor] Found ${pendingItems.length} wishlist item(s) to check`);
 
-  // Wire up the subject with all notification channels
+  const uniqueWineIds = [...new Set(pendingItems.map((i) => i.wineId))];
+  console.log(`[monitor] Refreshing prices for ${uniqueWineIds.length} unique wine(s) …`);
+  const { refreshed, refreshFailed } = await refreshWinePrices(uniqueWineIds);
+  console.log(`[monitor] Price refresh complete — updated: ${refreshed}, failed: ${refreshFailed}`);
+
   const subject = new PriceDropSubject();
   subject.subscribe(new EmailObserver());
   subject.subscribe(new NotificationObserver());
@@ -114,7 +169,6 @@ export async function runMonitor(): Promise<MonitorResult> {
   for (const item of pendingItems) {
     try {
       const wine = await Wine.findOne({ wineId: item.wineId });
-
       if (!wine) {
         console.log(`[monitor] Wine not found for wineId "${item.wineId}", skipping`);
         continue;
@@ -131,18 +185,16 @@ export async function runMonitor(): Promise<MonitorResult> {
           targetPrice:   item.targetPrice,
           wineUrl,
         });
-        console.log(`[monitor] Alerted ${item.email} for "${wine.name}"`);
+        console.log(`[monitor] Alerted ${item.email} for "${wine.name}" @ $${wine.salePrice}`);
         alerted++;
       } else {
-        console.log(
-          `[monitor] No alert for "${wine.name}" — $${wine.salePrice} > target $${item.targetPrice}`
-        );
+        console.log(`[monitor] No alert for "${wine.name}" — $${wine.salePrice} > target $${item.targetPrice}`);
       }
     } catch (err) {
       console.error(`[monitor] Error processing item ${item._id}:`, err);
     }
   }
 
-  console.log(`[monitor] Done — checked: ${pendingItems.length}, alerted: ${alerted}`);
-  return { checked: pendingItems.length, alerted };
+  console.log(`[monitor] Done — checked: ${pendingItems.length}, alerted: ${alerted}, refreshed: ${refreshed}, refreshFailed: ${refreshFailed}`);
+  return { checked: pendingItems.length, alerted, refreshed, refreshFailed };
 }
