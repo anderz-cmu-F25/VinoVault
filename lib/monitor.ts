@@ -15,7 +15,7 @@
 import { connectDB } from './db'
 import { Wishlist } from './models/Wishlist'
 import { Wine } from './models/Wine'
-import { User } from './models/User'
+import './models/User'
 import { Notification } from './models/Notification'
 import { sendPriceAlertEmail } from './email'
 import { fetchWinePrice } from './priceFetcher'
@@ -185,7 +185,7 @@ export async function runMonitor(): Promise<MonitorResult> {
       const entries = await getReadyWinesByEmail(email)
       readyWinesMap.set(
         email,
-        entries.map((e: any) => ({
+        entries.map((e: { wineName: string; vintage?: number | null; quantity?: number }) => ({
           wineName: e.wineName,
           vintage: e.vintage ?? null,
           quantity: e.quantity,
