@@ -20,7 +20,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
-import { CellarEntryCard } from '../../client/src/app/components/CellarEntryCard'
+import { CellarEntryCard } from '../../src/app/components/CellarEntryCard'
 
 const BASE_PROPS = {
   entryId: 'entry_abc',

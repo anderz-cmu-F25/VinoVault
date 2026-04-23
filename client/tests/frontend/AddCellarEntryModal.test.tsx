@@ -25,7 +25,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { AddCellarEntryModal } from '../../client/src/app/components/AddCellarEntryModal'
+import { AddCellarEntryModal } from '../../src/app/components/AddCellarEntryModal'
 
 // Mock Clerk — stable getToken reference
 const mockGetToken = vi.fn().mockResolvedValue('mock_token')

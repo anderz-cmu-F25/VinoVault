@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 const CLIENT_NODE_MODULES = path.resolve(__dirname, 'node_modules')
-const PROJECT_ROOT = path.resolve(__dirname, '..')
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -31,7 +30,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    root: PROJECT_ROOT,
     setupFiles: [path.resolve(__dirname, './src/test/setup.ts')],
     include: ['tests/frontend/**/*.test.tsx', 'tests/frontend/**/*.test.ts'],
   },
