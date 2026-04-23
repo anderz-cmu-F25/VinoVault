@@ -1,4 +1,4 @@
-import { Wine } from "lucide-react";
+import { BellRing, Target, Wine } from "lucide-react";
 
 interface EmptyWishlistProps {
   onAddClick: () => void;
@@ -38,8 +38,32 @@ export function EmptyWishlist({ onAddClick }: EmptyWishlistProps) {
           lineHeight: '1.6'
         }}
       >
-        Add a wine to start tracking prices.
+        Add wines you are considering and set a target price for each one.
       </p>
+
+      <div
+        className="mb-8 grid w-full max-w-md gap-3 rounded-lg border p-4 sm:grid-cols-2"
+        style={{ backgroundColor: "#FFFDF9", borderColor: "#E8DDD2" }}
+      >
+        <div className="flex items-start gap-2">
+          <Target className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#722F37" }} />
+          <p
+            className="text-xs text-left"
+            style={{ fontFamily: "'DM Sans', sans-serif", color: "#6F6A64", lineHeight: 1.5 }}
+          >
+            Use target prices to define what counts as a good deal.
+          </p>
+        </div>
+        <div className="flex items-start gap-2">
+          <BellRing className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#722F37" }} />
+          <p
+            className="text-xs text-left"
+            style={{ fontFamily: "'DM Sans', sans-serif", color: "#6F6A64", lineHeight: 1.5 }}
+          >
+            Watch for notifications when monitored prices drop.
+          </p>
+        </div>
+      </div>
 
       {/* CTA Button */}
       <div className="flex items-center">

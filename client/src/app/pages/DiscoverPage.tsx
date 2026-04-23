@@ -145,11 +145,11 @@ export function DiscoverPage() {
         params.set("search", submittedSearch);
       }
 
-      if (effectiveMode !== "personalized" && selectedRegion) {
+      if (effectiveMode === "keyword" && selectedRegion) {
         params.set("region", selectedRegion);
       }
 
-      if (effectiveMode !== "personalized" && selectedPriceRange) {
+      if (effectiveMode === "keyword" && selectedPriceRange) {
         params.set("priceRange", selectedPriceRange);
       }
 
@@ -264,7 +264,7 @@ export function DiscoverPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const resultStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const resultEnd = Math.min(page * PAGE_SIZE, total);
-  const showFilters = mode !== "personalized";
+  const showFilters = mode === "keyword";
 
   return (
     <main className="max-w-6xl mx-auto px-8 py-16">

@@ -23,7 +23,7 @@ describe("EmptyCellar", () => {
   it("renders the subtext message", () => {
     render(<EmptyCellar onAddClick={() => {}} />);
     expect(
-      screen.getByText(/start adding wines you own/i)
+      screen.getByText(/track quantity, storage location, and drinking status/i)
     ).toBeInTheDocument();
   });
 

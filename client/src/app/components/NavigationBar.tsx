@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, HelpCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -17,7 +17,11 @@ export interface ApiNotification {
   createdAt: string;
 }
 
-export function NavigationBar() {
+interface NavigationBarProps {
+  onOpenGuide?: () => void;
+}
+
+export function NavigationBar({ onOpenGuide }: NavigationBarProps) {
   const navLinks = [
     { name: "Discover", path: "/discover" },
     { name: "Wishlist", path: "/wishlist" },
@@ -156,6 +160,16 @@ export function NavigationBar() {
 
           {/* Right Section */}
           <div className="flex items-center space-x-5">
+            <button
+              className="p-2 hover:bg-gray-50 rounded-full transition-colors"
+              aria-label="Open quick start guide"
+              title="Quick start guide"
+              onClick={onOpenGuide}
+              style={{ cursor: 'pointer' }}
+            >
+              <HelpCircle className="w-5 h-5" style={{ color: '#5A5A5A' }} />
+            </button>
+
             {isSignedIn ? (
               <>
                 <div className="relative">
