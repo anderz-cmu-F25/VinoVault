@@ -15,6 +15,7 @@
 import { connectDB } from './db'
 import { Wishlist } from './models/Wishlist'
 import { Wine } from './models/Wine'
+import { User } from './models/User'
 import { Notification } from './models/Notification'
 import { sendPriceAlertEmail } from './email'
 import { fetchWinePrice } from './priceFetcher'
