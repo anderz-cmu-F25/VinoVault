@@ -24,6 +24,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/api/inventory': 'http://localhost:3002',
       '/api': 'http://localhost:3001',
     },
   },
