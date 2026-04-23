@@ -4,7 +4,6 @@ import { RootLayout } from "./layouts/RootLayout";
 import { WishlistPage } from "./pages/WishlistPage";
 import { DiscoverPage } from "./pages/DiscoverPage";
 import { CellarPage } from "./pages/CellarPage";
-import { ProfilePage } from "./pages/ProfilePage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { SocialPage } from "./pages/SocialPage";
@@ -124,10 +123,6 @@ export const router = createBrowserRouter([
           {
             path: "reviews/wine/:wineId",
             element: <AuthRoute requireSignedIn={true}><WineReviewDetailPage /></AuthRoute>
-          },
-          {
-            path: "profile",
-            element: <AuthRoute requireSignedIn={true}><ProfilePage /></AuthRoute>
           },
           {
             path: "social",
