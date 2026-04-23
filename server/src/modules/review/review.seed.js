@@ -55,7 +55,7 @@ async function main() {
   const deleted = await ReviewModel.deleteMany({ userId: /^seed_/ });
   console.log(`[seed] cleared ${deleted.deletedCount} prior seeded reviews`);
 
-  const wines = await WineModel.aggregate([{ $sample: { size: 25 } }]);
+  const wines = await WineModel.aggregate([{ $sample: { size: 10 } }]);
   if (!wines.length) {
     console.error("[seed] no wines in DB — nothing to seed against");
     await mongoose.disconnect();
