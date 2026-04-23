@@ -35,8 +35,8 @@ interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaved: (wineId: string) => void;
-  initialValues?: ReviewModalInitialValues;       // when present → edit mode
-  lockedWine?: { wineId: string; wineName: string }; // skip wine picker
+  initialValues?: ReviewModalInitialValues;
+  lockedWine?: { wineId: string; wineName: string };
 }
 
 export function ReviewModal({
@@ -63,7 +63,6 @@ export function ReviewModal({
 
   const searchTimer = useRef<number | null>(null);
 
-  // Reset state whenever the modal opens
   useEffect(() => {
     if (!isOpen) return;
     if (lockedWine) {
@@ -85,7 +84,6 @@ export function ReviewModal({
     setShowDropdown(false);
   }, [isOpen, initialValues, lockedWine]);
 
-  // Debounced wine search (disabled in edit / locked mode)
   useEffect(() => {
     if (isEditMode || lockedWine) return;
     if (searchTimer.current) window.clearTimeout(searchTimer.current);

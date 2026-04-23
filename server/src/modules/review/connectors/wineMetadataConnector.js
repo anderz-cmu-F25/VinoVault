@@ -1,8 +1,5 @@
 const WineModel = require("../wine.model");
 
-// External API access point (disabled; kept for future integration).
-// When GoPuff access is restored, flip USE_EXTERNAL_API to true and the
-// template-method handlers will transparently switch source.
 const USE_EXTERNAL_API = false;
 const GOPUFF_API_BASE = process.env.GOPUFF_API_BASE || "";
 
@@ -34,7 +31,7 @@ async function getWineDetails(wineId) {
       const external = await fetchFromExternalApi(wineId);
       if (external) return external;
     } catch (err) {
-      console.warn("[wineMetadataConnector] external fetch failed, falling back to DB", err.message);
+      console.warn("[wineMetadataConnector] external fetch failed", err.message);
     }
   }
   return fetchFromDatabase(wineId);

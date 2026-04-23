@@ -1,13 +1,5 @@
-/**
- * Seed dummy reviews for local testing.
- *
- * Usage (from repo root):
- *   node server/src/modules/review/review.seed.js
- *
- * Picks random wines from the existing Wine collection and attaches
- * a handful of sample reviews to each. Safe to re-run — clears prior
- * seeded reviews (tagged with userId starting "seed_").
- */
+// Seed dummy reviews for local testing.
+// Usage: node server/src/modules/review/review.seed.js
 require("dotenv").config({ path: "server/.env" });
 const mongoose = require("mongoose");
 const ReviewModel = require("./review.model");

@@ -5,11 +5,6 @@ const DeleteReviewHandler = require("./handlers/deleteReviewHandler");
 const dbConnector = require("./connectors/databaseConnector");
 const { ALLOWED_NOTES } = require("./review.model");
 
-/**
- * Thin HTTP layer. Each endpoint instantiates the matching Template-Method
- * handler and delegates. Keeps controllers uniform and the pipeline visible.
- */
-
 function toHttp(handler) {
   return async (req, res, next) => {
     try {
@@ -25,9 +20,6 @@ const createReview = toHttp(new CreateReviewHandler());
 const viewReviewsForWine = toHttp(new ViewReviewsHandler());
 const editReview = toHttp(new EditReviewHandler());
 const deleteReview = toHttp(new DeleteReviewHandler());
-
-// Auxiliary endpoints (not part of the template-method pipeline — these are
-// lookup helpers for the UI's search boxes and browse list).
 
 async function searchWines(req, res, next) {
   try {

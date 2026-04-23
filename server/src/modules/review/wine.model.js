@@ -18,9 +18,6 @@ const wineSchema = new mongoose.Schema(
 
 wineSchema.index({ name: "text" });
 
-// Registered under a distinct model name to avoid colliding with the
-// inventory module's "Wine" model (different schema). The explicit
-// collection name pins this to the shared 200-wine catalog in `wines`.
 const ReviewWineModel =
   mongoose.models.ReviewWine ||
   mongoose.model("ReviewWine", wineSchema, "wines");

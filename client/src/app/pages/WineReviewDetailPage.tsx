@@ -372,7 +372,6 @@ export function WineReviewDetailPage() {
         </div>
       )}
 
-      {/* Write modal — wine is locked to the current detail wine */}
       <ReviewModal
         isOpen={writeOpen}
         onClose={() => setWriteOpen(false)}
@@ -380,7 +379,6 @@ export function WineReviewDetailPage() {
         lockedWine={wine ? { wineId: wine.wineId, wineName: wine.name } : undefined}
       />
 
-      {/* Edit modal */}
       <ReviewModal
         isOpen={!!editingReview}
         onClose={() => setEditingReview(null)}
