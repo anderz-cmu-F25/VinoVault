@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const wishlistSchema = new mongoose.Schema(
   {
@@ -8,12 +8,12 @@ const wishlistSchema = new mongoose.Schema(
     isNotified: { type: Boolean, default: false },
   },
   { timestamps: true }
-);
+)
 
-wishlistSchema.index({ email: 1, wineId: 1 }, { unique: true });
+wishlistSchema.index({ email: 1, wineId: 1 }, { unique: true })
 
 const DiscoveryWishlistModel =
   mongoose.models.DiscoveryWishlist ||
-  mongoose.model("DiscoveryWishlist", wishlistSchema, "wishlists");
+  mongoose.model('DiscoveryWishlist', wishlistSchema, 'wishlists')
 
-module.exports = DiscoveryWishlistModel;
+module.exports = DiscoveryWishlistModel

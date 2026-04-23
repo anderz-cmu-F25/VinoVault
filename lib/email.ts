@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
-import type { Options as SMTPOptions } from "nodemailer/lib/smtp-transport";
+import nodemailer from 'nodemailer'
+import type { Options as SMTPOptions } from 'nodemailer/lib/smtp-transport'
 
 function createTransporter() {
   return nodemailer.createTransport({
@@ -11,22 +11,22 @@ function createTransporter() {
       pass: process.env.SMTP_PASS,
     },
     family: 4,
-  } as SMTPOptions);
+  } as SMTPOptions)
 }
 
 interface ReadyWine {
-  wineName: string;
-  vintage?: number | null;
-  quantity?: number;
+  wineName: string
+  vintage?: number | null
+  quantity?: number
 }
 
 interface PriceAlertEmailParams {
-  email: string;
-  wineName: string;
-  targetPrice: number;
-  currentPrice: number;
-  wineUrl: string;
-  readyWines?: ReadyWine[];
+  email: string
+  wineName: string
+  targetPrice: number
+  currentPrice: number
+  wineUrl: string
+  readyWines?: ReadyWine[]
 }
 
 function buildHtml({
@@ -35,7 +35,7 @@ function buildHtml({
   currentPrice,
   wineUrl,
   readyWines = [],
-}: Omit<PriceAlertEmailParams, "email">): string {
+}: Omit<PriceAlertEmailParams, 'email'>): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,7 +104,9 @@ function buildHtml({
             </td>
           </tr>
 
-          ${readyWines.length > 0 ? `
+          ${
+            readyWines.length > 0
+              ? `
           <!-- Ready to Drink Reminder -->
           <tr>
             <td style="padding:0 40px 32px;">
@@ -115,15 +117,21 @@ function buildHtml({
                     <p style="margin:0 0 14px;font-size:13px;color:#666666;line-height:1.5;">
                       These wines in your cellar are at peak drinking condition — don't wait too long!
                     </p>
-                    ${readyWines.map((w) => `
+                    ${readyWines
+                      .map(
+                        (w) => `
                     <p style="margin:0 0 6px;font-size:13px;color:#2c2c2c;">
-                      · <strong>${w.wineName}</strong>${w.vintage ? ` (${w.vintage})` : ""}${w.quantity ? ` — ${w.quantity} ${w.quantity === 1 ? "bottle" : "bottles"}` : ""}
-                    </p>`).join("")}
+                      · <strong>${w.wineName}</strong>${w.vintage ? ` (${w.vintage})` : ''}${w.quantity ? ` — ${w.quantity} ${w.quantity === 1 ? 'bottle' : 'bottles'}` : ''}
+                    </p>`
+                      )
+                      .join('')}
                   </td>
                 </tr>
               </table>
             </td>
-          </tr>` : ""}
+          </tr>`
+              : ''
+          }
 
           <!-- Footer -->
           <tr>
@@ -140,7 +148,7 @@ function buildHtml({
     </tr>
   </table>
 </body>
-</html>`;
+</html>`
 }
 
 export async function sendPriceAlertEmail({
@@ -152,16 +160,16 @@ export async function sendPriceAlertEmail({
   readyWines = [],
 }: PriceAlertEmailParams): Promise<void> {
   try {
-    console.log(`[email] Sending price alert to ${email} for "${wineName}"`);
+    console.log(`[email] Sending price alert to ${email} for "${wineName}"`)
     await createTransporter().sendMail({
       from: process.env.SMTP_FROM,
       to: email,
       subject: `🚨 Price Drop Alert: ${wineName} has reached your target price!`,
       html: buildHtml({ wineName, targetPrice, currentPrice, wineUrl, readyWines }),
-    });
-    console.log(`[email] Price alert sent successfully to ${email}`);
+    })
+    console.log(`[email] Price alert sent successfully to ${email}`)
   } catch (error) {
-    console.error(`[email] Failed to send price alert to ${email}:`, error);
-    throw error;
+    console.error(`[email] Failed to send price alert to ${email}:`, error)
+    throw error
   }
 }

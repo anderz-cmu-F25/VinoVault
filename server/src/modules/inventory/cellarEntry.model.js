@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const cellarEntrySchema = new mongoose.Schema(
   {
@@ -9,7 +9,7 @@ const cellarEntrySchema = new mongoose.Schema(
     },
     wineId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Wine",
+      ref: 'Wine',
       required: true,
     },
     wineName: {
@@ -22,7 +22,7 @@ const cellarEntrySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["red", "white", "rosé", "sparkling", "dessert", "other"],
+      enum: ['red', 'white', 'rosé', 'sparkling', 'dessert', 'other'],
     },
     region: {
       type: String,
@@ -46,8 +46,8 @@ const cellarEntrySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["storing", "ready", "consumed"],
-      default: "storing",
+      enum: ['storing', 'ready', 'consumed'],
+      default: 'storing',
     },
     notes: {
       type: String,
@@ -55,8 +55,8 @@ const cellarEntrySchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-const CellarEntryModel = mongoose.model("CellarEntry", cellarEntrySchema);
+const CellarEntryModel = mongoose.model('CellarEntry', cellarEntrySchema)
 
-module.exports = CellarEntryModel;
+module.exports = CellarEntryModel

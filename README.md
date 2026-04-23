@@ -1,7 +1,8 @@
 # UPDATE NOTE
+
 Sigrid is now enabled for this repo.
 You have new GitHub Actions workflow files.
-You will receive a Sigrid invitation shortly - accept it and review the architecture analysis of your repo as part of the project documentation assignment. There's no need to improve the codebase or architecture when working on the implementation. 
+You will receive a Sigrid invitation shortly - accept it and review the architecture analysis of your repo as part of the project documentation assignment. There's no need to improve the codebase or architecture when working on the implementation.
 Visit Sigrid at https://sigrid-says.com/cmusvfse
 
 # 🍷 VinoVault
@@ -92,6 +93,7 @@ Browser
 ### Backend Subsystems
 
 **Vercel Serverless (`api/`, TypeScript)**
+
 - **Wine Discovery** – search, filtering, and pricing (`wines.ts`)
 - **Wishlist & Price Tracking** – wishlist management with price-drop alerts (`wishlist.ts`)
 - **Notification System** – centralized alerts and preferences (`notifications.ts`)
@@ -100,6 +102,7 @@ Browser
 - **Cron Jobs** – scheduled price monitoring (`cron.ts`)
 
 **Express Server (`server/`, JavaScript) — deployed on Render**
+
 - **Social System** – user relationships, friend requests (`social/friendship/`)
 - **Real-time Chat** – Socket.IO WebSocket chat (`social/chat/`)
 - **Events** – wine tasting events (`social/event/`)
@@ -114,19 +117,19 @@ Browser
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React (Vite), TypeScript |
-| Styling | Tailwind CSS, Radix UI, shadcn/ui |
+| Layer            | Technology                               |
+| ---------------- | ---------------------------------------- |
+| Frontend         | React (Vite), TypeScript                 |
+| Styling          | Tailwind CSS, Radix UI, shadcn/ui        |
 | Backend (Vercel) | Node.js Serverless Functions, TypeScript |
-| Backend (Render) | Node.js, Express.js, JavaScript |
-| Real-time | Socket.IO (WebSockets) |
-| Database | MongoDB Atlas (Mongoose) |
-| Auth | Clerk (Email/Password + Google OAuth) |
-| Frontend Deploy | Vercel |
-| Backend Deploy | Vercel (serverless) + Render (Express) |
-| API Design | RESTful JSON APIs |
-| Tooling | Prettier, GitHub |
+| Backend (Render) | Node.js, Express.js, JavaScript          |
+| Real-time        | Socket.IO (WebSockets)                   |
+| Database         | MongoDB Atlas (Mongoose)                 |
+| Auth             | Clerk (Email/Password + Google OAuth)    |
+| Frontend Deploy  | Vercel                                   |
+| Backend Deploy   | Vercel (serverless) + Render (Express)   |
+| API Design       | RESTful JSON APIs                        |
+| Tooling          | Prettier, GitHub                         |
 
 ---
 
@@ -193,22 +196,22 @@ There are **three** env files to create for local development:
 cp .env.example .env.local
 ```
 
-| Variable | Description |
-|---|---|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `PORT` | `3001` for local Vercel dev server |
-| `CLERK_SECRET_KEY` | From Clerk Dashboard → API Keys (`sk_test_...`) |
-| `CLERK_WEBHOOK_SECRET` | From Clerk Dashboard → Webhooks (`whsec_...`) |
-| `CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Same as above — exposed to Vite |
-| `FRONTEND_URL` | `http://localhost:5173` for local dev |
-| `SCRAPERAPI_KEY` | From [scraperapi.com](https://www.scraperapi.com) — used for wine scraping |
-| `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) |
-| `SMTP_PORT` | SMTP port (e.g. `587`) |
-| `SMTP_USER` | SMTP login email |
-| `SMTP_PASS` | SMTP app password |
-| `SMTP_FROM` | Sender display name + email |
-| `CRON_SECRET` | Random secret to protect cron endpoints |
+| Variable                     | Description                                                                |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `MONGODB_URI`                | MongoDB Atlas connection string                                            |
+| `PORT`                       | `3001` for local Vercel dev server                                         |
+| `CLERK_SECRET_KEY`           | From Clerk Dashboard → API Keys (`sk_test_...`)                            |
+| `CLERK_WEBHOOK_SECRET`       | From Clerk Dashboard → Webhooks (`whsec_...`)                              |
+| `CLERK_PUBLISHABLE_KEY`      | From Clerk Dashboard → API Keys (`pk_test_...`)                            |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Same as above — exposed to Vite                                            |
+| `FRONTEND_URL`               | `http://localhost:5173` for local dev                                      |
+| `SCRAPERAPI_KEY`             | From [scraperapi.com](https://www.scraperapi.com) — used for wine scraping |
+| `SMTP_HOST`                  | SMTP server host (e.g. `smtp.gmail.com`)                                   |
+| `SMTP_PORT`                  | SMTP port (e.g. `587`)                                                     |
+| `SMTP_USER`                  | SMTP login email                                                           |
+| `SMTP_PASS`                  | SMTP app password                                                          |
+| `SMTP_FROM`                  | Sender display name + email                                                |
+| `CRON_SECRET`                | Random secret to protect cron endpoints                                    |
 
 ---
 
@@ -218,13 +221,13 @@ cp .env.example .env.local
 cp server/.env.example server/.env
 ```
 
-| Variable | Description |
-|---|---|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `PORT` | `3000` (Express server port) |
-| `CLERK_SECRET_KEY` | From Clerk Dashboard → API Keys (`sk_test_...`) |
+| Variable                | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `MONGODB_URI`           | MongoDB Atlas connection string                 |
+| `PORT`                  | `3000` (Express server port)                    |
+| `CLERK_SECRET_KEY`      | From Clerk Dashboard → API Keys (`sk_test_...`) |
 | `CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
-| `FRONTEND_URL` | `http://localhost:5173` for local dev |
+| `FRONTEND_URL`          | `http://localhost:5173` for local dev           |
 
 ---
 
@@ -234,13 +237,13 @@ cp server/.env.example server/.env
 cp client/.env.example client/.env.local
 ```
 
-| Variable | Description |
-|---|---|
-| `VITE_CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`) |
-| `VITE_SERVER_URL` | `http://localhost:3000` for local dev (Express server) |
-| `CLERK_SECRET_KEY` | Injected by Vercel CLI for serverless functions |
-| `MONGODB_URI` | Injected by Vercel CLI for serverless functions |
-| `VERCEL_OIDC_TOKEN` | Auto-populated by Vercel CLI — leave blank locally |
+| Variable                     | Description                                            |
+| ---------------------------- | ------------------------------------------------------ |
+| `VITE_CLERK_PUBLISHABLE_KEY` | From Clerk Dashboard → API Keys (`pk_test_...`)        |
+| `VITE_SERVER_URL`            | `http://localhost:3000` for local dev (Express server) |
+| `CLERK_SECRET_KEY`           | Injected by Vercel CLI for serverless functions        |
+| `MONGODB_URI`                | Injected by Vercel CLI for serverless functions        |
+| `VERCEL_OIDC_TOKEN`          | Auto-populated by Vercel CLI — leave blank locally     |
 
 > Get the actual secret values from a teammate — never commit `.env` or `.env.local` to the repo.
 
@@ -283,6 +286,7 @@ Requires `SCRAPERAPI_KEY` in the root `.env.local`. `wine_data.json` is gitignor
 ---
 
 ## 🔗 Clerk Webhook Setup
+
 ## 🚢 Production Deployment
 
 ### Backend → Render
@@ -290,18 +294,18 @@ Requires `SCRAPERAPI_KEY` in the root `.env.local`. `wine_data.json` is gitignor
 1. Create a new **Web Service** on [render.com](https://render.com)
 2. Connect your GitHub repo
 3. Set the following in Render's dashboard:
-   - **Root directory**: *(leave empty — repo root)*
+   - **Root directory**: _(leave empty — repo root)_
    - **Build command**: `npm install`
    - **Start command**: `node server/src/server.js`
 4. Add these **Environment Variables** in Render:
 
-| Variable | Value |
-|---|---|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `CLERK_SECRET_KEY` | `sk_live_...` from Clerk |
-| `CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk |
-| `FRONTEND_URL` | `https://vinovault-lac.vercel.app` |
-| `PORT` | `3000` |
+| Variable                | Value                              |
+| ----------------------- | ---------------------------------- |
+| `MONGODB_URI`           | MongoDB Atlas connection string    |
+| `CLERK_SECRET_KEY`      | `sk_live_...` from Clerk           |
+| `CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk           |
+| `FRONTEND_URL`          | `https://vinovault-lac.vercel.app` |
+| `PORT`                  | `3000`                             |
 
 5. Your Render URL: **`https://vinovault.onrender.com`**
 
@@ -314,10 +318,10 @@ Requires `SCRAPERAPI_KEY` in the root `.env.local`. `wine_data.json` is gitignor
    - **Output directory**: `dist`
 3. Add these **Environment Variables** in Vercel:
 
-| Variable | Value |
-|---|---|
-| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk |
-| `VITE_SERVER_URL` | `https://vinovault.onrender.com` |
+| Variable                     | Value                            |
+| ---------------------------- | -------------------------------- |
+| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_live_...` from Clerk         |
+| `VITE_SERVER_URL`            | `https://vinovault.onrender.com` |
 
 4. Deploy — Vercel auto-deploys on every push to `main`
 
@@ -330,6 +334,7 @@ Your Vercel URL: **`https://vinovault-lac.vercel.app`**
 ### Allowed Origins
 
 In [Clerk Dashboard](https://dashboard.clerk.com) → **Configure** → **Allowed origins**, add:
+
 - `http://localhost:5173` (local dev)
 - `https://vinovault-lac.vercel.app` (production)
 

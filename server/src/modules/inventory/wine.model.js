@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const wineSchema = new mongoose.Schema(
   {
@@ -13,7 +13,7 @@ const wineSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["red", "white", "rosé", "sparkling", "dessert", "other"],
+      enum: ['red', 'white', 'rosé', 'sparkling', 'dessert', 'other'],
     },
     region: {
       type: String,
@@ -28,8 +28,8 @@ const wineSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-const WineModel = mongoose.models.Wine || mongoose.model("Wine", wineSchema);
+const WineModel = mongoose.models.Wine || mongoose.model('Wine', wineSchema)
 
-module.exports = WineModel;
+module.exports = WineModel

@@ -1,12 +1,12 @@
-const WineModel = require("../wine.model");
+const WineModel = require('../wine.model')
 
-const USE_EXTERNAL_API = false;
-const GOPUFF_API_BASE = process.env.GOPUFF_API_BASE || "";
+const USE_EXTERNAL_API = false
+const GOPUFF_API_BASE = process.env.GOPUFF_API_BASE || ''
 
 async function fetchFromExternalApi(wineId) {
-  const res = await fetch(`${GOPUFF_API_BASE}/wines/${wineId}`);
-  if (!res.ok) return null;
-  const raw = await res.json();
+  const res = await fetch(`${GOPUFF_API_BASE}/wines/${wineId}`)
+  if (!res.ok) return null
+  const raw = await res.json()
   return {
     wineId: raw.wineId,
     name: raw.name,
@@ -17,24 +17,24 @@ async function fetchFromExternalApi(wineId) {
     salePrice: raw.salePrice,
     stock: raw.stock,
     wineUrl: raw.wineUrl,
-  };
+  }
 }
 
 async function fetchFromDatabase(wineId) {
-  return WineModel.findOne({ wineId }).lean();
+  return WineModel.findOne({ wineId }).lean()
 }
 
 async function getWineDetails(wineId) {
-  if (!wineId) return null;
+  if (!wineId) return null
   if (USE_EXTERNAL_API && GOPUFF_API_BASE) {
     try {
-      const external = await fetchFromExternalApi(wineId);
-      if (external) return external;
+      const external = await fetchFromExternalApi(wineId)
+      if (external) return external
     } catch (err) {
-      console.warn("[wineMetadataConnector] external fetch failed", err.message);
+      console.warn('[wineMetadataConnector] external fetch failed', err.message)
     }
   }
-  return fetchFromDatabase(wineId);
+  return fetchFromDatabase(wineId)
 }
 
-module.exports = { getWineDetails };
+module.exports = { getWineDetails }

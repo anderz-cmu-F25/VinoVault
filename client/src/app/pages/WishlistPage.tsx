@@ -1,128 +1,132 @@
-import { Plus, RefreshCw, Info } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
-import { toast } from "sonner";
-import { WineCard } from "../components/WineCard";
-import { AddWineModal } from "../components/AddWineModal";
-import { RemoveWineModal } from "../components/RemoveWineModal";
-import { EditWineModal } from "../components/EditWineModal";
-import { EmptyWishlist } from "../components/EmptyWishlist";
-import { GatedWishlistState } from "../components/GatedWishlistState";
+import { Plus, RefreshCw, Info } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useAuth } from '@clerk/clerk-react'
+import { toast } from 'sonner'
+import { WineCard } from '../components/WineCard'
+import { AddWineModal } from '../components/AddWineModal'
+import { RemoveWineModal } from '../components/RemoveWineModal'
+import { EditWineModal } from '../components/EditWineModal'
+import { EmptyWishlist } from '../components/EmptyWishlist'
+import { GatedWishlistState } from '../components/GatedWishlistState'
 
 interface WishlistItem {
-  _id: string;
-  wineId: string;
-  name: string;
-  region: string | null;
-  marketPrice: number | null;
-  regularPrice: number | null;
-  targetPrice: number;
-  isNotified: boolean;
+  _id: string
+  wineId: string
+  name: string
+  region: string | null
+  marketPrice: number | null
+  regularPrice: number | null
+  targetPrice: number
+  isNotified: boolean
 }
 
 export function WishlistPage() {
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken } = useAuth()
 
-  const [isAddWineModalOpen, setIsAddWineModalOpen] = useState(false);
-  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
-  const [editTarget, setEditTarget] = useState<{ id: string; name: string; currentTargetPrice: number } | null>(null);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [isAddWineModalOpen, setIsAddWineModalOpen] = useState(false)
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null)
+  const [editTarget, setEditTarget] = useState<{
+    id: string
+    name: string
+    currentTargetPrice: number
+  } | null>(null)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   const fetchWishlist = useCallback(async () => {
-    if (!isSignedIn) return;
-    setIsLoading(true);
+    if (!isSignedIn) return
+    setIsLoading(true)
     try {
-      const token = await getToken();
-      const res = await fetch("/api/wishlist", {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-      if (!res.ok) throw new Error("Failed to fetch wishlist");
-      const json = await res.json();
-      setWishlistItems(json.data ?? []);
-      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      const token = await getToken()
+      const res = await fetch('/api/wishlist', {
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      })
+      if (!res.ok) throw new Error('Failed to fetch wishlist')
+      const json = await res.json()
+      setWishlistItems(json.data ?? [])
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     } catch {
-      toast.error("Could not load your wishlist");
+      toast.error('Could not load your wishlist')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, getToken])
 
   useEffect(() => {
-    fetchWishlist();
-  }, [fetchWishlist]);
+    fetchWishlist()
+  }, [fetchWishlist])
 
   const handleRefresh = () => {
-    fetchWishlist();
-  };
+    fetchWishlist()
+  }
 
   const handleRemove = (id: string) => {
-    const item = wishlistItems.find((w) => w._id === id);
-    setRemoveTarget({ id, name: item?.name ?? "This wine" });
-  };
+    const item = wishlistItems.find((w) => w._id === id)
+    setRemoveTarget({ id, name: item?.name ?? 'This wine' })
+  }
 
   const handleEdit = (id: string) => {
-    const item = wishlistItems.find((w) => w._id === id);
-    if (!item) return;
-    setEditTarget({ id, name: item.name, currentTargetPrice: item.targetPrice });
-  };
+    const item = wishlistItems.find((w) => w._id === id)
+    if (!item) return
+    setEditTarget({ id, name: item.name, currentTargetPrice: item.targetPrice })
+  }
 
   const confirmEdit = async (newPrice: number) => {
-    if (!editTarget) return;
-    const { id } = editTarget;
-    const item = wishlistItems.find((w) => w._id === id);
-    if (!item) return;
-    setEditTarget(null);
+    if (!editTarget) return
+    const { id } = editTarget
+    const item = wishlistItems.find((w) => w._id === id)
+    if (!item) return
+    setEditTarget(null)
     setWishlistItems((prev) =>
       prev.map((w) => (w._id === id ? { ...w, targetPrice: newPrice } : w))
-    );
+    )
     try {
-      const token = await getToken();
-      const res = await fetch("/api/wishlist", {
-        method: "POST",
+      const token = await getToken()
+      const res = await fetch('/api/wishlist', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify({ wineId: item.wineId, targetPrice: newPrice }),
-      });
+      })
       if (!res.ok) {
-        await fetchWishlist();
-        toast.error("Failed to update target price");
+        await fetchWishlist()
+        toast.error('Failed to update target price')
       } else {
-        toast.success("Target price updated");
-        window.dispatchEvent(new Event("vinovault:notifications-refresh"));
+        toast.success('Target price updated')
+        window.dispatchEvent(new Event('vinovault:notifications-refresh'))
       }
     } catch {
-      await fetchWishlist();
-      toast.error("Network error — please try again");
+      await fetchWishlist()
+      toast.error('Network error — please try again')
     }
-  };
+  }
 
   const confirmRemove = async () => {
-    if (!removeTarget) return;
-    const { id } = removeTarget;
-    setRemoveTarget(null);
-    setWishlistItems((prev) => prev.filter((item) => item._id !== id));
+    if (!removeTarget) return
+    const { id } = removeTarget
+    setRemoveTarget(null)
+    setWishlistItems((prev) => prev.filter((item) => item._id !== id))
     try {
-      const token = await getToken();
+      const token = await getToken()
       const res = await fetch(`/api/wishlist?id=${id}`, {
-        method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+        method: 'DELETE',
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      })
       if (!res.ok) {
-        await fetchWishlist();
-        toast.error("Failed to remove wine");
+        await fetchWishlist()
+        toast.error('Failed to remove wine')
       } else {
-        toast.success("Removed from wishlist");
+        toast.success('Removed from wishlist')
       }
     } catch {
-      await fetchWishlist();
-      toast.error("Network error — please try again");
+      await fetchWishlist()
+      toast.error('Network error — please try again')
     }
-  };
+  }
 
   return (
     <main className="max-w-5xl mx-auto px-8 py-16">
@@ -135,7 +139,7 @@ export function WishlistPage() {
               style={{
                 fontFamily: "'Playfair Display', serif",
                 color: '#722F37',
-                lineHeight: '1.2'
+                lineHeight: '1.2',
               }}
             >
               My Wishlist
@@ -144,7 +148,7 @@ export function WishlistPage() {
               className="text-base"
               style={{
                 fontFamily: "'DM Sans', sans-serif",
-                color: '#7A7A7A'
+                color: '#7A7A7A',
               }}
             >
               Track prices and get notified when they drop
@@ -167,11 +171,15 @@ export function WishlistPage() {
                     fontWeight: 500,
                     fontSize: '14px',
                     cursor: 'pointer',
-                    padding: '6px 14px'
+                    padding: '6px 14px',
                   }}
                   onClick={handleRefresh}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FDF6EE'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FDF6EE'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                   Refresh
@@ -186,11 +194,15 @@ export function WishlistPage() {
                     fontFamily: "'DM Sans', sans-serif",
                     fontWeight: 500,
                     cursor: 'pointer',
-                    border: 'none'
+                    border: 'none',
                   }}
                   onClick={() => setIsAddWineModalOpen(true)}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#5e2529'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#722F37'; }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#5e2529'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#722F37'
+                  }}
                 >
                   <Plus className="w-4 h-4" />
                   Add Wine
@@ -204,7 +216,7 @@ export function WishlistPage() {
                     style={{
                       fontFamily: "'DM Sans', sans-serif",
                       fontSize: '12px',
-                      color: '#8C8C8C'
+                      color: '#8C8C8C',
                     }}
                   >
                     Last updated {lastUpdated}
@@ -215,10 +227,7 @@ export function WishlistPage() {
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                   >
-                    <Info
-                      className="w-3.5 h-3.5"
-                      style={{ color: '#8C8C8C', cursor: 'pointer' }}
-                    />
+                    <Info className="w-3.5 h-3.5" style={{ color: '#8C8C8C', cursor: 'pointer' }} />
                     {showTooltip && (
                       <div
                         className="absolute right-0 top-full mt-2 px-3 py-2 rounded-lg whitespace-nowrap"
@@ -228,7 +237,7 @@ export function WishlistPage() {
                           fontFamily: "'DM Sans', sans-serif",
                           fontSize: '11px',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          zIndex: 100
+                          zIndex: 100,
                         }}
                       >
                         Prices are checked daily by the monitor. Click refresh to reload.
@@ -264,10 +273,12 @@ export function WishlistPage() {
                 targetPrice={item.targetPrice}
                 status={
                   item.marketPrice != null && item.marketPrice <= item.targetPrice
-                    ? "targetMet"
-                    : item.marketPrice != null && item.regularPrice != null && item.marketPrice < item.regularPrice
-                    ? "priceDropped"
-                    : "watching"
+                    ? 'targetMet'
+                    : item.marketPrice != null &&
+                        item.regularPrice != null &&
+                        item.marketPrice < item.regularPrice
+                      ? 'priceDropped'
+                      : 'watching'
                 }
                 onRemove={handleRemove}
                 onEdit={handleEdit}
@@ -291,7 +302,7 @@ export function WishlistPage() {
       {/* Remove Wine Modal */}
       <RemoveWineModal
         isOpen={removeTarget !== null}
-        wineName={removeTarget?.name ?? ""}
+        wineName={removeTarget?.name ?? ''}
         onCancel={() => setRemoveTarget(null)}
         onConfirm={confirmRemove}
       />
@@ -299,11 +310,11 @@ export function WishlistPage() {
       {/* Edit Target Price Modal */}
       <EditWineModal
         isOpen={editTarget !== null}
-        wineName={editTarget?.name ?? ""}
+        wineName={editTarget?.name ?? ''}
         currentTargetPrice={editTarget?.currentTargetPrice ?? 0}
         onCancel={() => setEditTarget(null)}
         onConfirm={confirmEdit}
       />
     </main>
-  );
+  )
 }

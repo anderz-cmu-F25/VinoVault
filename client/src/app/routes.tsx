@@ -1,42 +1,41 @@
-import { createBrowserRouter, Navigate, Outlet, useNavigate } from "react-router-dom";
-import { ClerkProvider, useAuth, AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
-import { RootLayout } from "./layouts/RootLayout";
-import { WishlistPage } from "./pages/WishlistPage";
-import { DiscoverPage } from "./pages/DiscoverPage";
-import { CellarPage } from "./pages/CellarPage";
-import { LoginPage } from "./pages/LoginPage";
-import { SignupPage } from "./pages/SignupPage";
-import { SocialPage } from "./pages/SocialPage";
-import { ChatRoomPage } from "./pages/ChatRoomPage";
-import { ReviewPage } from "./pages/ReviewPage";
-import { WineReviewDetailPage } from "./pages/WineReviewDetailPage";
+import { createBrowserRouter, Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { ClerkProvider, useAuth, AuthenticateWithRedirectCallback } from '@clerk/clerk-react'
+import { RootLayout } from './layouts/RootLayout'
+import { WishlistPage } from './pages/WishlistPage'
+import { DiscoverPage } from './pages/DiscoverPage'
+import { CellarPage } from './pages/CellarPage'
+import { LoginPage } from './pages/LoginPage'
+import { SignupPage } from './pages/SignupPage'
+import { SocialPage } from './pages/SocialPage'
+import { ChatRoomPage } from './pages/ChatRoomPage'
+import { ReviewPage } from './pages/ReviewPage'
+import { WineReviewDetailPage } from './pages/WineReviewDetailPage'
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Clerk Publishable Key");
+  throw new Error('Missing Clerk Publishable Key')
 }
 
 function ClerkProviderLayout() {
-  const navigate = useNavigate();
-  const buildClerkNavigator = (replace = false) => (
-    to: string,
-    metadata?: { windowNavigate?: (to: URL | string) => void }
-  ) => {
-    if (/^https?:\/\//.test(to)) {
-      const url = new URL(to);
+  const navigate = useNavigate()
+  const buildClerkNavigator =
+    (replace = false) =>
+    (to: string, metadata?: { windowNavigate?: (to: URL | string) => void }) => {
+      if (/^https?:\/\//.test(to)) {
+        const url = new URL(to)
 
-      if (url.origin !== window.location.origin) {
-        metadata?.windowNavigate?.(url) ?? window.location.assign(url.toString());
-        return;
+        if (url.origin !== window.location.origin) {
+          metadata?.windowNavigate?.(url) ?? window.location.assign(url.toString())
+          return
+        }
+
+        navigate(`${url.pathname}${url.search}${url.hash}`, { replace })
+        return
       }
 
-      navigate(`${url.pathname}${url.search}${url.hash}`, { replace });
-      return;
+      navigate(to, { replace })
     }
-
-    navigate(to, { replace });
-  };
 
   return (
     <ClerkProvider
@@ -50,21 +49,21 @@ function ClerkProviderLayout() {
     >
       <Outlet />
     </ClerkProvider>
-  );
+  )
 }
 
 function AuthRoute({
   children,
   requireSignedIn,
 }: {
-  children: React.ReactNode;
-  requireSignedIn: boolean;
+  children: React.ReactNode
+  requireSignedIn: boolean
 }) {
-  const { isSignedIn, isLoaded } = useAuth();
-  if (!isLoaded) return null;
-  if (requireSignedIn && !isSignedIn) return <Navigate to="/login" replace />;
-  if (!requireSignedIn && isSignedIn) return <Navigate to="/discover" replace />;
-  return <>{children}</>;
+  const { isSignedIn, isLoaded } = useAuth()
+  if (!isLoaded) return null
+  if (requireSignedIn && !isSignedIn) return <Navigate to="/login" replace />
+  if (!requireSignedIn && isSignedIn) return <Navigate to="/discover" replace />
+  return <>{children}</>
 }
 
 export const router = createBrowserRouter([
@@ -72,68 +71,95 @@ export const router = createBrowserRouter([
     element: <ClerkProviderLayout />,
     children: [
       {
-        path: "/login",
+        path: '/login',
         element: (
           <AuthRoute requireSignedIn={false}>
             <LoginPage />
           </AuthRoute>
-        )
+        ),
       },
       {
-        path: "/signup",
+        path: '/signup',
         element: (
           <AuthRoute requireSignedIn={false}>
             <SignupPage />
           </AuthRoute>
-        )
+        ),
       },
       {
-        path: "/sso-callback",
+        path: '/sso-callback',
         element: (
-          <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#FDF6EE' }}>
+          <div
+            className="flex min-h-screen items-center justify-center"
+            style={{ backgroundColor: '#FDF6EE' }}
+          >
             <AuthenticateWithRedirectCallback />
             <div id="clerk-captcha" />
           </div>
-        )
+        ),
       },
       {
-        path: "/",
+        path: '/',
         element: <RootLayout />,
         children: [
           {
             index: true,
-            element: <Navigate to="/discover" replace />
+            element: <Navigate to="/discover" replace />,
           },
           {
-            path: "wishlist",
-            element: <WishlistPage />
+            path: 'wishlist',
+            element: <WishlistPage />,
           },
           {
-            path: "discover",
-            element: <AuthRoute requireSignedIn={true}><DiscoverPage /></AuthRoute>
+            path: 'discover',
+            element: (
+              <AuthRoute requireSignedIn={true}>
+                <DiscoverPage />
+              </AuthRoute>
+            ),
           },
           {
-            path: "cellar",
-            element: <AuthRoute requireSignedIn={true}><CellarPage /></AuthRoute>
+            path: 'cellar',
+            element: (
+              <AuthRoute requireSignedIn={true}>
+                <CellarPage />
+              </AuthRoute>
+            ),
           },
           {
-            path: "reviews",
-            element: <AuthRoute requireSignedIn={true}><ReviewPage /></AuthRoute>
+            path: 'reviews',
+            element: (
+              <AuthRoute requireSignedIn={true}>
+                <ReviewPage />
+              </AuthRoute>
+            ),
           },
           {
-            path: "reviews/wine/:wineId",
-            element: <AuthRoute requireSignedIn={true}><WineReviewDetailPage /></AuthRoute>
+            path: 'reviews/wine/:wineId',
+            element: (
+              <AuthRoute requireSignedIn={true}>
+                <WineReviewDetailPage />
+              </AuthRoute>
+            ),
           },
           {
-            path: "social",
-            element: <AuthRoute requireSignedIn={true}><SocialPage /></AuthRoute>
+            path: 'social',
+            element: (
+              <AuthRoute requireSignedIn={true}>
+                <SocialPage />
+              </AuthRoute>
+            ),
           },
           {
-            path: "social/chat/:friendId",
-            element: <AuthRoute requireSignedIn={true}><ChatRoomPage /></AuthRoute>
-          }
-        ]
-      }
-    ]
-  }
-]);
+            path: 'social/chat/:friendId',
+            element: (
+              <AuthRoute requireSignedIn={true}>
+                <ChatRoomPage />
+              </AuthRoute>
+            ),
+          },
+        ],
+      },
+    ],
+  },
+])

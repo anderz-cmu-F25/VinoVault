@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const socialEventSchema = new mongoose.Schema(
   {
@@ -32,8 +32,8 @@ const socialEventSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-const SocialEventModel = mongoose.model("SocialEvent", socialEventSchema);
+const SocialEventModel = mongoose.model('SocialEvent', socialEventSchema)
 
-module.exports = SocialEventModel;
+module.exports = SocialEventModel

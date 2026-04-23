@@ -1,15 +1,15 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IWine extends Document {
-  wineId: string;
-  name: string;
-  vintage: string | number | null;
-  region: string | null;
-  stock: number | null;
-  regularPrice: number | null;
-  salePrice: number | null;
-  rating: string | null;
-  wineUrl: string | null;
+  wineId: string
+  name: string
+  vintage: string | number | null
+  region: string | null
+  stock: number | null
+  regularPrice: number | null
+  salePrice: number | null
+  rating: string | null
+  wineUrl: string | null
 }
 
 const WineSchema = new Schema<IWine>(
@@ -25,8 +25,7 @@ const WineSchema = new Schema<IWine>(
     wineUrl: { type: String, default: null },
   },
   { timestamps: true }
-);
+)
 
 // Mirrors server/src/modules/wines/wine.model.js — both share the same MongoDB collection
-export const Wine =
-  mongoose.models.Wine ?? mongoose.model<IWine>("Wine", WineSchema);
+export const Wine = mongoose.models.Wine ?? mongoose.model<IWine>('Wine', WineSchema)

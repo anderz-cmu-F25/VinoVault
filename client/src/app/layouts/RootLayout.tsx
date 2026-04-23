@@ -1,19 +1,19 @@
-import { Outlet } from "react-router-dom";
-import { Toaster } from "sonner";
-import { useCallback, useState } from "react";
-import { NavigationBar } from "../components/NavigationBar";
-import { QuickStartGuide } from "../components/QuickStartGuide";
+import { Outlet } from 'react-router-dom'
+import { Toaster } from 'sonner'
+import { useCallback, useState } from 'react'
+import { NavigationBar } from '../components/NavigationBar'
+import { QuickStartGuide } from '../components/QuickStartGuide'
 
 export function RootLayout() {
-  const [isQuickStartOpen, setIsQuickStartOpen] = useState(false);
-  const openQuickStart = useCallback(() => setIsQuickStartOpen(true), []);
+  const [isQuickStartOpen, setIsQuickStartOpen] = useState(false)
+  const openQuickStart = useCallback(() => setIsQuickStartOpen(true), [])
 
   return (
-    <div 
+    <div
       className="min-h-screen"
-      style={{ 
+      style={{
         backgroundColor: '#FDF6EE',
-        fontFamily: "'DM Sans', sans-serif"
+        fontFamily: "'DM Sans', sans-serif",
       }}
     >
       <NavigationBar onOpenGuide={openQuickStart} />
@@ -21,5 +21,5 @@ export function RootLayout() {
       <QuickStartGuide isOpen={isQuickStartOpen} onOpenChange={setIsQuickStartOpen} />
       <Toaster position="bottom-right" richColors />
     </div>
-  );
+  )
 }

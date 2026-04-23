@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const wineSchema = new mongoose.Schema(
   {
@@ -13,12 +13,11 @@ const wineSchema = new mongoose.Schema(
     wineUrl: { type: String, default: null },
   },
   { timestamps: true }
-);
+)
 
-wineSchema.index({ name: "text" });
+wineSchema.index({ name: 'text' })
 
 const DiscoveryWineModel =
-  mongoose.models.DiscoveryWine ||
-  mongoose.model("DiscoveryWine", wineSchema, "wines");
+  mongoose.models.DiscoveryWine || mongoose.model('DiscoveryWine', wineSchema, 'wines')
 
-module.exports = DiscoveryWineModel;
+module.exports = DiscoveryWineModel

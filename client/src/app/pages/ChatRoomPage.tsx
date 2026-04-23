@@ -1,81 +1,78 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useUser, useAuth } from "@clerk/clerk-react";
-import { io, Socket } from "socket.io-client";
+import { useEffect, useRef, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useUser, useAuth } from '@clerk/clerk-react'
+import { io, Socket } from 'socket.io-client'
 
 type ChatMessage = {
-  _id?: string;
-  senderId: string;
-  receiverId?: string;
-  content: string;
-  createdAt?: string;
-};
+  _id?: string
+  senderId: string
+  receiverId?: string
+  content: string
+  createdAt?: string
+}
 
-const API_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
-const SOCKET_BASE = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+const SOCKET_BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
 
 export function ChatRoomPage() {
-  const { friendId } = useParams();
-  const navigate = useNavigate();
-  const { user, isLoaded: isUserLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { friendId } = useParams()
+  const navigate = useNavigate()
+  const { user, isLoaded: isUserLoaded } = useUser()
+  const { getToken } = useAuth()
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [content, setContent] = useState("");
-  const [error, setError] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [content, setContent] = useState('')
+  const [error, setError] = useState('')
+  const [isConnecting, setIsConnecting] = useState(false)
 
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null)
+  const socketRef = useRef<Socket | null>(null)
 
-  const currentUserId = user?.id;
+  const currentUserId = user?.id
 
   useEffect(() => {
     async function loadHistory() {
-      if (!friendId || !currentUserId) return;
+      if (!friendId || !currentUserId) return
 
       try {
-        setError("");
-        const token = await getToken();
+        setError('')
+        const token = await getToken()
 
-        const response = await fetch(
-          `${API_BASE}/api/social/chats/${friendId}/messages`,
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          }
-        );
+        const response = await fetch(`${API_BASE}/api/social/chats/${friendId}/messages`, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        })
 
-        const result = await response.json();
+        const result = await response.json()
 
         if (!response.ok) {
-          throw new Error(result.message || "Failed to load messages");
+          throw new Error(result.message || 'Failed to load messages')
         }
 
-        setMessages(result.data?.messages || []);
+        setMessages(result.data?.messages || [])
       } catch (err: any) {
-        setError(err.message || "Failed to load messages");
+        setError(err.message || 'Failed to load messages')
       }
     }
 
-    loadHistory();
-  }, [friendId, currentUserId, getToken]);
+    loadHistory()
+  }, [friendId, currentUserId, getToken])
 
   useEffect(() => {
-    let mounted = true;
-    let activeSocket: Socket | null = null;
+    let mounted = true
+    let activeSocket: Socket | null = null
 
     async function connectSocket() {
-      if (!friendId || !currentUserId) return;
+      if (!friendId || !currentUserId) return
 
       try {
-        setIsConnecting(true);
-        setError("");
+        setIsConnecting(true)
+        setError('')
 
         // const token = await getToken();
 
-        if (!mounted) return;
+        if (!mounted) return
 
         // activeSocket = io(SOCKET_BASE, {
         //   transports: ["websocket"],
@@ -85,90 +82,87 @@ export function ChatRoomPage() {
         // });
 
         activeSocket = io(SOCKET_BASE, {
-          transports: ["websocket"],
-        });
+          transports: ['websocket'],
+        })
 
-        socketRef.current = activeSocket;
+        socketRef.current = activeSocket
 
-        activeSocket.on("connect", () => {
-          if (!mounted) return;
+        activeSocket.on('connect', () => {
+          if (!mounted) return
 
-          activeSocket?.emit("join_chat", {
+          activeSocket?.emit('join_chat', {
             currentUserId,
             friendId,
-          });
+          })
 
-          setIsConnecting(false);
-        });
+          setIsConnecting(false)
+        })
 
-        activeSocket.on("receive_message", (message: ChatMessage) => {
+        activeSocket.on('receive_message', (message: ChatMessage) => {
           setMessages((prev) => {
             const alreadyExists = prev.some(
-              (item) =>
-                item._id &&
-                message._id &&
-                item._id === message._id
-            );
+              (item) => item._id && message._id && item._id === message._id
+            )
 
-            if (alreadyExists) return prev;
-            return [...prev, message];
-          });
-        });
+            if (alreadyExists) return prev
+            return [...prev, message]
+          })
+        })
 
-        activeSocket.on("chat_error", (payload: { message?: string }) => {
-          setError(payload?.message || "Chat error");
-        });
+        activeSocket.on('chat_error', (payload: { message?: string }) => {
+          setError(payload?.message || 'Chat error')
+        })
 
-        activeSocket.on("connect_error", (err) => {
-          setError(err.message || "Socket connection failed");
-          setIsConnecting(false);
-        });
+        activeSocket.on('connect_error', (err) => {
+          setError(err.message || 'Socket connection failed')
+          setIsConnecting(false)
+        })
       } catch (err: any) {
-        setError(err.message || "Failed to connect chat");
-        setIsConnecting(false);
+        setError(err.message || 'Failed to connect chat')
+        setIsConnecting(false)
       }
     }
 
-    connectSocket();
+    connectSocket()
 
     return () => {
-      mounted = false;
+      mounted = false
 
       if (activeSocket) {
-        activeSocket.off("connect");
-        activeSocket.off("receive_message");
-        activeSocket.off("chat_error");
-        activeSocket.off("connect_error");
-        activeSocket.disconnect();
+        activeSocket.off('connect')
+        activeSocket.off('receive_message')
+        activeSocket.off('chat_error')
+        activeSocket.off('connect_error')
+        activeSocket.disconnect()
       }
 
-      socketRef.current = null;
-    };
-  }, [friendId, currentUserId, getToken]);
+      socketRef.current = null
+    }
+  }, [friendId, currentUserId, getToken])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   function handleSendMessage() {
     if (!content.trim() || !friendId || !currentUserId || !socketRef.current) {
-      return;
+      return
     }
 
-    setError("");
+    setError('')
 
-    socketRef.current.emit("send_message", {
+    socketRef.current.emit('send_message', {
       currentUserId,
       friendId,
       content: content.trim(),
-    });
+    })
 
-    setContent("");
+    setContent('')
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      handleSendMessage();
+    if (e.key === 'Enter') {
+      handleSendMessage()
     }
   }
 
@@ -179,7 +173,7 @@ export function ChatRoomPage() {
           Loading chat...
         </div>
       </main>
-    );
+    )
   }
 
   return (
@@ -188,18 +182,18 @@ export function ChatRoomPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate("/social")}
+              onClick={() => navigate('/social')}
               style={{
-                height: "38px",
-                borderRadius: "999px",
-                border: "1px solid #DDD6D0",
-                backgroundColor: "#FFFFFF",
-                color: "#722F37",
-                padding: "0 16px",
+                height: '38px',
+                borderRadius: '999px',
+                border: '1px solid #DDD6D0',
+                backgroundColor: '#FFFFFF',
+                color: '#722F37',
+                padding: '0 16px',
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: "14px",
+                fontSize: '14px',
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: 'pointer',
               }}
             >
               ← Back
@@ -208,7 +202,7 @@ export function ChatRoomPage() {
               className="text-3xl"
               style={{
                 fontFamily: "'Playfair Display', serif",
-                color: "#722F37",
+                color: '#722F37',
               }}
             >
               Chat Room
@@ -218,39 +212,35 @@ export function ChatRoomPage() {
           <span
             className="text-sm"
             style={{
-              color: isConnecting ? "#9A9A9A" : "#2E7D32",
+              color: isConnecting ? '#9A9A9A' : '#2E7D32',
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            {isConnecting ? "Connecting..." : "Connected"}
+            {isConnecting ? 'Connecting...' : 'Connected'}
           </span>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-red-700">{error}</div>}
 
         <div className="h-[420px] overflow-y-auto rounded-2xl border border-[#EFEFEF] p-4 bg-[#FCFCFC]">
           <div className="flex flex-col gap-3">
             {messages.map((message, index) => {
-              const isMine = message.senderId === currentUserId;
+              const isMine = message.senderId === currentUserId
 
               return (
                 <div
                   key={message._id || `${message.senderId}-${index}`}
                   className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                    isMine ? "self-end" : "self-start"
+                    isMine ? 'self-end' : 'self-start'
                   }`}
                   style={{
-                    backgroundColor: isMine ? "#722F37" : "#F3ECE7",
-                    color: isMine ? "#FFFFFF" : "#4B3A35",
+                    backgroundColor: isMine ? '#722F37' : '#F3ECE7',
+                    color: isMine ? '#FFFFFF' : '#4B3A35',
                   }}
                 >
                   <p>{message.content}</p>
                 </div>
-              );
+              )
             })}
             <div ref={bottomRef} />
           </div>
@@ -268,8 +258,8 @@ export function ChatRoomPage() {
             onClick={handleSendMessage}
             className="px-6 py-3 rounded-full"
             style={{
-              backgroundColor: "#722F37",
-              color: "#FFFFFF",
+              backgroundColor: '#722F37',
+              color: '#FFFFFF',
             }}
           >
             Send
@@ -277,5 +267,5 @@ export function ChatRoomPage() {
         </div>
       </div>
     </main>
-  );
+  )
 }
