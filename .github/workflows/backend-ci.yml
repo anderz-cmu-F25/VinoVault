@@ -1,0 +1,33 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+  push:
+    branches:
+      - dev
+
+jobs:
+  backend-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run backend tests
+        run: npm test
+
+      - name: Auto deploy Render
+        if: github.event_name == 'push'
+        run: curl -X POST -fsS "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

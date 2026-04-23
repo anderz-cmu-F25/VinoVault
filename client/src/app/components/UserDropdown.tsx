@@ -1,21 +1,29 @@
 import { useState, useRef, useEffect } from "react";
-import { User, Heart, Wine, Bell, Settings, LogOut, MessageCircle } from "lucide-react";
+
+import { Heart, Wine, LogOut, MessageCircle, Star, Pencil, Check, X } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 import { SignOutModal } from "./SignOutModal";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 export function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, clerkUser, updateUsername } = useCurrentUser();
   const { signOut } = useClerk();
 
-  const userName = user?.fullName ?? user?.firstName ?? "User";
-  const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
+  const userName = user?.username || clerkUser?.fullName || clerkUser?.firstName || "User";
+  const userEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || "";
   const userInitials =
-    ((user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "")).toUpperCase() || "U";
+    ((userName[0] ?? "") + (userName[1] ?? "")).toUpperCase() || "U";
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -34,12 +42,44 @@ export function UserDropdown() {
     };
   }, [isOpen]);
 
+  const handleUsernameClick = () => {
+    setUsernameInput(userName);
+    setUsernameError("");
+    setIsEditingUsername(true);
+    setTimeout(() => usernameInputRef.current?.select(), 0);
+  };
+
+  const handleUsernameSave = async () => {
+    const trimmed = usernameInput.trim();
+    if (!trimmed || trimmed === userName) {
+      setIsEditingUsername(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      setUsernameError("Username can only contain letters, numbers, - or _");
+      return;
+    }
+    setIsSavingUsername(true);
+    setUsernameError("");
+    try {
+      await updateUsername(trimmed);
+      setIsEditingUsername(false);
+    } catch (err: any) {
+      setUsernameError(err.message || "Failed to update username");
+    } finally {
+      setIsSavingUsername(false);
+    }
+  };
+
+  const handleUsernameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleUsernameSave();
+    if (e.key === "Escape") setIsEditingUsername(false);
+  };
+
   const menuItems = [
-    { label: "My Profile", icon: User, path: "/profile" },
     { label: "My Wishlist", icon: Heart, path: "/wishlist" },
     { label: "My Cellar", icon: Wine, path: "/cellar" },
-    { label: "Notification Settings", icon: Bell, path: "/settings/notifications" },
-    { label: "Account Settings", icon: Settings, path: "/settings/account" },
+    { label: "My Reviews", icon: Star, path: "/reviews" },
     { label: "Social", icon: MessageCircle, path: "/social" },
   ];
 
@@ -129,17 +169,71 @@ export function UserDropdown() {
             </div>
 
             {/* User Name */}
-            <div
-              className="text-center mb-1"
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#2A2A2A'
-              }}
-            >
-              {userName}
+            <div className="flex items-center justify-center gap-1 mb-1">
+              {isEditingUsername ? (
+                <>
+                  <input
+                    ref={usernameInputRef}
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    onKeyDown={handleUsernameKeyDown}
+                    disabled={isSavingUsername}
+                    autoFocus
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#2A2A2A',
+                      border: '1px solid #722F37',
+                      borderRadius: '4px',
+                      padding: '2px 6px',
+                      outline: 'none',
+                      width: '140px',
+                      textAlign: 'center',
+                    }}
+                  />
+                  <button
+                    onClick={handleUsernameSave}
+                    disabled={isSavingUsername}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#722F37' }}
+                  >
+                    <Check style={{ width: '14px', height: '14px' }} />
+                  </button>
+                  <button
+                    onClick={() => setIsEditingUsername(false)}
+                    disabled={isSavingUsername}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#7A7A7A' }}
+                  >
+                    <X style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span
+                    style={{
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: '#2A2A2A',
+                    }}
+                  >
+                    {userName}
+                  </span>
+                  <button
+                    onClick={handleUsernameClick}
+                    title="Edit username"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#7A7A7A', display: 'flex', alignItems: 'center' }}
+                  >
+                    <Pencil style={{ width: '12px', height: '12px' }} />
+                  </button>
+                </>
+              )}
             </div>
+            {usernameError && (
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#B71C1C', textAlign: 'center', marginBottom: '4px' }}>
+                {usernameError}
+              </div>
+            )}
 
             {/* User Email */}
             <div
