@@ -2,6 +2,12 @@ const mongoose = require('mongoose')
 
 const wineSchema = new mongoose.Schema(
   {
+    wineId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
     wineName: {
       type: String,
       required: true,

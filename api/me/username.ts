@@ -46,7 +46,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (error?.errors?.[0]?.code === 'form_identifier_exists') {
       return res.status(409).json({ message: 'Username already taken' })
     }
-    console.error('[me/username] Error:', error)
-    return res.status(500).json({ message: 'Internal server error' })
+    if (error?.errors?.[0]?.code === "form_username_invalid_character") {
+      return res.status(400).json({ message: "Username can only contain letters, numbers, - or _" });
+    }
+    console.error("[me/username] Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }

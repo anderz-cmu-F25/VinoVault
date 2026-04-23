@@ -40,8 +40,9 @@ async function getEvents(req, res, next) {
 
 async function getEventDetails(req, res, next) {
   try {
-    const eventId = req.params.eventId
-    const event = await getSocialEventById(eventId)
+    const currentUserId = req.auth?.userId;
+    const eventId = req.params.eventId;
+    const event = await getSocialEventById(eventId, currentUserId);
 
     return res.status(200).json({
       data: event,

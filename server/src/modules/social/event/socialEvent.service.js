@@ -45,8 +45,8 @@ async function getAllSocialEvents(currentUserId) {
   }))
 }
 
-async function getSocialEventById(eventId) {
-  const event = await findEventById(eventId)
+async function getSocialEventById(eventId, currentUserId) {
+  const event = await findEventById(eventId);
 
   if (!event) {
     throw new Error('Event not found.')
@@ -56,7 +56,10 @@ async function getSocialEventById(eventId) {
   return {
     ...event.toObject(),
     hostUsername: usernameMap[event.hostUserId] || null,
-  }
+    joined: currentUserId
+      ? event.participantUserIds.includes(currentUserId)
+      : false,
+  };
 }
 
 async function joinSocialEvent(currentUserId, eventId) {
