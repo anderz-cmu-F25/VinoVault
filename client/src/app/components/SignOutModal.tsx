@@ -1,13 +1,13 @@
-import { LogOut } from "lucide-react";
+import { LogOut } from 'lucide-react'
 
 interface SignOutModalProps {
-  isOpen: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
+  isOpen: boolean
+  onCancel: () => void
+  onConfirm: () => void
 }
 
 export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <>
@@ -15,7 +15,7 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
       <div
         className="fixed inset-0 z-[9998]"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.5)'
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
         }}
         onClick={onCancel}
       />
@@ -31,7 +31,7 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
             maxWidth: '380px',
             backgroundColor: '#ffffff',
             borderRadius: '16px',
-            padding: '32px'
+            padding: '32px',
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -42,7 +42,7 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
                 width: '40px',
                 height: '40px',
                 color: '#722F37',
-                strokeWidth: 1.5
+                strokeWidth: 1.5,
               }}
             />
           </div>
@@ -54,7 +54,7 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
               fontFamily: "'Playfair Display', serif",
               fontSize: '20px',
               color: '#722F37',
-              lineHeight: '1.3'
+              lineHeight: '1.3',
             }}
           >
             Sign out of VinoVault?
@@ -67,7 +67,7 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '14px',
               color: '#7A7A7A',
-              lineHeight: '1.5'
+              lineHeight: '1.5',
             }}
           >
             You'll need to sign in again to access your wishlist and notifications.
@@ -87,14 +87,14 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '14px',
                 fontWeight: 500,
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
               onClick={onCancel}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#F5F5F5';
+                e.currentTarget.style.backgroundColor = '#F5F5F5'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.backgroundColor = 'transparent'
               }}
             >
               Cancel
@@ -112,14 +112,14 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: '14px',
                 fontWeight: 500,
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
               onClick={onConfirm}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#5e2529';
+                e.currentTarget.style.backgroundColor = '#5e2529'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#722F37';
+                e.currentTarget.style.backgroundColor = '#722F37'
               }}
             >
               Sign out
@@ -128,5 +128,5 @@ export function SignOutModal({ isOpen, onCancel, onConfirm }: SignOutModalProps)
         </div>
       </div>
     </>
-  );
+  )
 }

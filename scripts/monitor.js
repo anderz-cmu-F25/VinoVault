@@ -14,21 +14,21 @@
  * and call subject.subscribe(new YourObserver()) — nothing else changes.
  */
 
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import path from 'path';
-import mongoose from 'mongoose';
-import nodemailer from 'nodemailer';
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import path from 'path'
+import mongoose from 'mongoose'
+import nodemailer from 'nodemailer'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') })
 
 // ─── Env validation ───────────────────────────────────────────────────────────
-const REQUIRED_ENV = ['MONGODB_URI', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'];
+const REQUIRED_ENV = ['MONGODB_URI', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS']
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
-    console.error(`[monitor] Missing required env var: ${key}`);
-    process.exit(1);
+    console.error(`[monitor] Missing required env var: ${key}`)
+    process.exit(1)
   }
 }
 
@@ -37,48 +37,48 @@ for (const key of REQUIRED_ENV) {
 // They intentionally mirror api/lib/models/ — keep in sync if schemas change.
 
 const wineSchema = new mongoose.Schema({
-  wineId:       { type: String, required: true, unique: true, index: true },
-  name:         { type: String, required: true },
-  salePrice:    { type: Number, default: null },
+  wineId: { type: String, required: true, unique: true, index: true },
+  name: { type: String, required: true },
+  salePrice: { type: Number, default: null },
   regularPrice: { type: Number, default: null },
-});
-const Wine = mongoose.models.Wine ?? mongoose.model('Wine', wineSchema);
+})
+const Wine = mongoose.models.Wine ?? mongoose.model('Wine', wineSchema)
 
 const wishlistSchema = new mongoose.Schema(
   {
-    email:       { type: String, required: true },
-    wineId:      { type: String, required: true },
+    email: { type: String, required: true },
+    wineId: { type: String, required: true },
     targetPrice: { type: Number, required: true },
-    isNotified:  { type: Boolean, default: false },
+    isNotified: { type: Boolean, default: false },
   },
   { timestamps: true }
-);
-wishlistSchema.index({ email: 1, wineId: 1 }, { unique: true });
-const Wishlist = mongoose.models.Wishlist ?? mongoose.model('Wishlist', wishlistSchema);
+)
+wishlistSchema.index({ email: 1, wineId: 1 }, { unique: true })
+const Wishlist = mongoose.models.Wishlist ?? mongoose.model('Wishlist', wishlistSchema)
 
 const notificationSchema = new mongoose.Schema(
   {
-    email:         { type: String, required: true, index: true },
-    wineId:        { type: String, required: true },
-    wineName:      { type: String, required: true },
+    email: { type: String, required: true, index: true },
+    wineId: { type: String, required: true },
+    wineName: { type: String, required: true },
     previousPrice: { type: Number, default: null },
-    currentPrice:  { type: Number, required: true },
-    targetPrice:   { type: Number, required: true },
-    isRead:        { type: Boolean, default: false },
+    currentPrice: { type: Number, required: true },
+    targetPrice: { type: Number, required: true },
+    isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
-);
+)
 const Notification =
-  mongoose.models.Notification ?? mongoose.model('Notification', notificationSchema);
+  mongoose.models.Notification ?? mongoose.model('Notification', notificationSchema)
 
 // ─── Email ────────────────────────────────────────────────────────────────────
 // Mirrors api/lib/email.ts — kept inline so this script stays self-contained.
 const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST,
-  port:   Number(process.env.SMTP_PORT ?? 587),
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT ?? 587),
   secure: false,
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-});
+})
 
 function buildHtml({ wineName, targetPrice, currentPrice, wineUrl }) {
   return `<!DOCTYPE html>
@@ -124,36 +124,38 @@ function buildHtml({ wineName, targetPrice, currentPrice, wineUrl }) {
       </table>
     </td></tr>
   </table>
-</body></html>`;
+</body></html>`
 }
 
 async function sendPriceAlertEmail({ email, wineName, targetPrice, currentPrice, wineUrl }) {
-  console.log(`[email] Sending price alert to ${email} for "${wineName}"`);
+  console.log(`[email] Sending price alert to ${email} for "${wineName}"`)
   await transporter.sendMail({
-    from:    process.env.SMTP_FROM,
-    to:      email,
+    from: process.env.SMTP_FROM,
+    to: email,
     subject: `🚨 Price Drop Alert: ${wineName} has reached your target price!`,
-    html:    buildHtml({ wineName, targetPrice, currentPrice, wineUrl }),
-  });
-  console.log(`[email] Sent successfully to ${email}`);
+    html: buildHtml({ wineName, targetPrice, currentPrice, wineUrl }),
+  })
+  console.log(`[email] Sent successfully to ${email}`)
 }
 
 // ─── Observer pattern ─────────────────────────────────────────────────────────
 
 class PriceDropSubject {
-  #observers = [];
-  subscribe(observer) { this.#observers.push(observer); }
+  #observers = []
+  subscribe(observer) {
+    this.#observers.push(observer)
+  }
   async notify(event) {
-    await Promise.all(this.#observers.map((obs) => obs.update(event)));
+    await Promise.all(this.#observers.map((obs) => obs.update(event)))
   }
 }
 
 class EmailObserver {
   async update({ email, wineName, targetPrice, currentPrice, wineUrl }) {
     try {
-      await sendPriceAlertEmail({ email, wineName, targetPrice, currentPrice, wineUrl });
+      await sendPriceAlertEmail({ email, wineName, targetPrice, currentPrice, wineUrl })
     } catch (err) {
-      console.error('[EmailObserver] Failed:', err);
+      console.error('[EmailObserver] Failed:', err)
     }
   }
 }
@@ -161,68 +163,75 @@ class EmailObserver {
 class NotificationObserver {
   async update({ email, wineId, wineName, previousPrice, currentPrice, targetPrice }) {
     try {
-      await Notification.create({ email, wineId, wineName, previousPrice, currentPrice, targetPrice });
-      console.log(`[NotificationObserver] Saved notification for ${email}`);
+      await Notification.create({
+        email,
+        wineId,
+        wineName,
+        previousPrice,
+        currentPrice,
+        targetPrice,
+      })
+      console.log(`[NotificationObserver] Saved notification for ${email}`)
     } catch (err) {
-      console.error('[NotificationObserver] Failed:', err);
+      console.error('[NotificationObserver] Failed:', err)
     }
   }
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function runMonitor() {
-  await mongoose.connect(process.env.MONGODB_URI);
-  console.log('[monitor] Connected to MongoDB');
+  await mongoose.connect(process.env.MONGODB_URI)
+  console.log('[monitor] Connected to MongoDB')
 
-  const pendingItems = await Wishlist.find({ isNotified: false });
-  console.log(`[monitor] Found ${pendingItems.length} unnotified wishlist item(s)`);
+  const pendingItems = await Wishlist.find({ isNotified: false })
+  console.log(`[monitor] Found ${pendingItems.length} unnotified wishlist item(s)`)
 
-  const subject = new PriceDropSubject();
-  subject.subscribe(new EmailObserver());
-  subject.subscribe(new NotificationObserver());
+  const subject = new PriceDropSubject()
+  subject.subscribe(new EmailObserver())
+  subject.subscribe(new NotificationObserver())
 
-  let alerted = 0;
+  let alerted = 0
 
   for (const item of pendingItems) {
     try {
-      const wine = await Wine.findOne({ wineId: item.wineId });
+      const wine = await Wine.findOne({ wineId: item.wineId })
 
       if (!wine) {
-        console.log(`[monitor] Wine not found for wineId "${item.wineId}", skipping`);
-        continue;
+        console.log(`[monitor] Wine not found for wineId "${item.wineId}", skipping`)
+        continue
       }
 
       if (wine.salePrice !== null && wine.salePrice <= item.targetPrice) {
         await subject.notify({
-          email:         item.email,
-          wineId:        item.wineId,
-          wineName:      wine.name,
+          email: item.email,
+          wineId: item.wineId,
+          wineName: wine.name,
           previousPrice: wine.regularPrice,
-          currentPrice:  wine.salePrice,
-          targetPrice:   item.targetPrice,
-          wineUrl:       `https://www.wine.com/product/${item.wineId}`,
-        });
+          currentPrice: wine.salePrice,
+          targetPrice: item.targetPrice,
+          wineUrl: `https://www.wine.com/product/${item.wineId}`,
+        })
 
-        await Wishlist.updateOne({ _id: item._id }, { isNotified: true });
-        console.log(`[monitor] Alerted ${item.email} for "${wine.name}"`);
-        alerted++;
+        await Wishlist.updateOne({ _id: item._id }, { isNotified: true })
+        console.log(`[monitor] Alerted ${item.email} for "${wine.name}"`)
+        alerted++
       } else {
         console.log(
           `[monitor] No alert for "${wine.name}" — $${wine.salePrice} > target $${item.targetPrice}`
-        );
+        )
       }
     } catch (err) {
-      console.error(`[monitor] Error processing item ${item._id}:`, err);
+      console.error(`[monitor] Error processing item ${item._id}:`, err)
     }
   }
 
-  console.log(`[monitor] Done — checked: ${pendingItems.length}, alerted: ${alerted}`);
-  await mongoose.disconnect();
-  console.log('[monitor] Disconnected');
-  process.exit(0);
+  console.log(`[monitor] Done — checked: ${pendingItems.length}, alerted: ${alerted}`)
+  await mongoose.disconnect()
+  console.log('[monitor] Disconnected')
+  process.exit(0)
 }
 
 runMonitor().catch((err) => {
-  console.error('[monitor] Fatal error:', err);
-  mongoose.disconnect().finally(() => process.exit(1));
-});
+  console.error('[monitor] Fatal error:', err)
+  mongoose.disconnect().finally(() => process.exit(1))
+})

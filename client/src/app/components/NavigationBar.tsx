@@ -1,108 +1,110 @@
-import { Bell } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
-import { NotificationPanel } from "./NotificationPanel";
-import { UserDropdown } from "./UserDropdown";
+import { Bell, HelpCircle } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '@clerk/clerk-react'
+import { NotificationPanel } from './NotificationPanel'
+import { UserDropdown } from './UserDropdown'
 
 export interface ApiNotification {
-  _id: string;
-  wineId: string;
-  wineName: string;
-  wineUrl?: string;
-  previousPrice: number | null;
-  currentPrice: number;
-  targetPrice: number;
-  isRead: boolean;
-  createdAt: string;
+  _id: string
+  wineId: string
+  wineName: string
+  wineUrl?: string
+  previousPrice: number | null
+  currentPrice: number
+  targetPrice: number
+  isRead: boolean
+  createdAt: string
 }
 
-export function NavigationBar() {
+interface NavigationBarProps {
+  onOpenGuide?: () => void
+}
+
+export function NavigationBar({ onOpenGuide }: NavigationBarProps) {
   const navLinks = [
-    { name: "Discover", path: "/discover" },
-    { name: "Wishlist", path: "/wishlist" },
-    { name: "Cellar", path: "/cellar" },
-    { name: "Review", path: "/reviews" },
-    { name: "Social", path: "/social" },
-  ];
+    { name: 'Discover', path: '/discover' },
+    { name: 'Wishlist', path: '/wishlist' },
+    { name: 'Cellar', path: '/cellar' },
+    { name: 'Review', path: '/reviews' },
+    { name: 'Social', path: '/social' },
+  ]
 
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { isSignedIn, getToken } = useAuth();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [notifications, setNotifications] = useState<ApiNotification[]>([])
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { isSignedIn, getToken } = useAuth()
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const fetchNotifications = useCallback(async () => {
-    if (!isSignedIn) return;
+    if (!isSignedIn) return
     try {
-      const token = await getToken();
-      const res = await fetch("/api/notifications", {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-      if (!res.ok) return;
-      const json = await res.json();
-      setNotifications(json.data ?? []);
+      const token = await getToken()
+      const res = await fetch('/api/notifications', {
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      })
+      if (!res.ok) return
+      const json = await res.json()
+      setNotifications(json.data ?? [])
     } catch {
       // Non-critical — badge simply won't show
     }
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, getToken])
 
   // Fetch on sign-in
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    fetchNotifications()
+  }, [fetchNotifications])
 
   // Re-fetch when wishlist triggers a potential new notification
   useEffect(() => {
-    const handler = () => fetchNotifications();
-    window.addEventListener("vinovault:notifications-refresh", handler);
-    return () => window.removeEventListener("vinovault:notifications-refresh", handler);
-  }, [fetchNotifications]);
+    const handler = () => fetchNotifications()
+    window.addEventListener('vinovault:notifications-refresh', handler)
+    return () => window.removeEventListener('vinovault:notifications-refresh', handler)
+  }, [fetchNotifications])
 
   const handleMarkRead = async (id: string) => {
     // Optimistic update
-    setNotifications((prev) =>
-      prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)))
     try {
-      const token = await getToken();
+      const token = await getToken()
       await fetch(`/api/notifications?id=${id}`, {
-        method: "PATCH",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+        method: 'PATCH',
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      })
     } catch {
       // Revert on failure
-      await fetchNotifications();
+      await fetchNotifications()
     }
-  };
+  }
 
   const handleMarkAllRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
     try {
-      const token = await getToken();
-      await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+      const token = await getToken()
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      })
     } catch {
-      await fetchNotifications();
+      await fetchNotifications()
     }
-  };
+  }
 
   const handleClearAll = async () => {
-    setNotifications([]);
+    setNotifications([])
     try {
-      const token = await getToken();
-      await fetch("/api/notifications", {
-        method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+      const token = await getToken()
+      await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      })
     } catch {
-      await fetchNotifications();
+      await fetchNotifications()
     }
-  };
+  }
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -123,10 +125,10 @@ export function NavigationBar() {
           {/* Center Navigation Links */}
           <div className="hidden md:flex items-center space-x-10">
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive = location.pathname === link.path
               const isGrayedOut =
                 !isSignedIn &&
-                (link.name === "Discover" || link.name === "Cellar" || link.name === "Review");
+                (link.name === 'Discover' || link.name === 'Cellar' || link.name === 'Review')
 
               return (
                 <Link
@@ -142,20 +144,30 @@ export function NavigationBar() {
                     pointerEvents: isGrayedOut ? 'none' : 'auto',
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive && !isGrayedOut) e.currentTarget.style.color = '#722F37';
+                    if (!isActive && !isGrayedOut) e.currentTarget.style.color = '#722F37'
                   }}
                   onMouseLeave={(e) => {
-                    if (!isActive && !isGrayedOut) e.currentTarget.style.color = '#5A5A5A';
+                    if (!isActive && !isGrayedOut) e.currentTarget.style.color = '#5A5A5A'
                   }}
                 >
                   {link.name}
                 </Link>
-              );
+              )
             })}
           </div>
 
           {/* Right Section */}
           <div className="flex items-center space-x-5">
+            <button
+              className="p-2 hover:bg-gray-50 rounded-full transition-colors"
+              aria-label="Open quick start guide"
+              title="Quick start guide"
+              onClick={onOpenGuide}
+              style={{ cursor: 'pointer' }}
+            >
+              <HelpCircle className="w-5 h-5" style={{ color: '#5A5A5A' }} />
+            </button>
+
             {isSignedIn ? (
               <>
                 <div className="relative">
@@ -211,8 +223,12 @@ export function NavigationBar() {
                   padding: 0,
                 }}
                 onClick={() => navigate('/login')}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.7'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.7'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1'
+                }}
               >
                 Sign in
               </button>
@@ -221,5 +237,5 @@ export function NavigationBar() {
         </div>
       </div>
     </nav>
-  );
+  )
 }

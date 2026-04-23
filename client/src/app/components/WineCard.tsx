@@ -1,19 +1,18 @@
-import { Pencil } from "lucide-react";
+import { Pencil } from 'lucide-react'
 
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=200&q=80";
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=200&q=80'
 
 interface WineCardProps {
-  id: string;
-  name: string;
-  region: string | null;
-  marketPrice: number | null;
-  regularPrice?: number | null;
-  targetPrice: number;
-  imageUrl?: string;
-  status: "watching" | "priceDropped" | "targetMet";
-  onRemove: (id: string) => void;
-  onEdit: (id: string) => void;
+  id: string
+  name: string
+  region: string | null
+  marketPrice: number | null
+  regularPrice?: number | null
+  targetPrice: number
+  imageUrl?: string
+  status: 'watching' | 'priceDropped' | 'targetMet'
+  onRemove: (id: string) => void
+  onEdit: (id: string) => void
 }
 
 export function WineCard({
@@ -29,56 +28,50 @@ export function WineCard({
   onEdit,
 }: WineCardProps) {
   const getStatusBadge = () => {
-    if (status === "targetMet") {
+    if (status === 'targetMet') {
       return (
         <div
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
           style={{
             backgroundColor: '#E8F5E9',
-            color: '#2E7D32'
+            color: '#2E7D32',
           }}
         >
-          <div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: '#2E7D32' }}
-          />
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#2E7D32' }} />
           <span
             className="text-xs"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 500
+              fontWeight: 500,
             }}
           >
             Target Met
           </span>
         </div>
-      );
+      )
     }
 
-    if (status === "priceDropped") {
+    if (status === 'priceDropped') {
       return (
         <div
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
           style={{
             backgroundColor: '#FFF8E1',
-            color: '#E65100'
+            color: '#E65100',
           }}
         >
-          <div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: '#E65100' }}
-          />
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#E65100' }} />
           <span
             className="text-xs"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 500
+              fontWeight: 500,
             }}
           >
             Price Dropped
           </span>
         </div>
-      );
+      )
     }
 
     return (
@@ -86,32 +79,29 @@ export function WineCard({
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
         style={{
           backgroundColor: '#F5F5F5',
-          color: '#757575'
+          color: '#757575',
         }}
       >
-        <div
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: '#757575' }}
-        />
+        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#757575' }} />
         <span
           className="text-xs"
           style={{
             fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 500
+            fontWeight: 500,
           }}
         >
           Watching
         </span>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div
       className="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow"
       style={{
         borderRadius: '12px',
-        border: status === "targetMet" ? '2px solid #C9A96E' : 'none'
+        border: status === 'targetMet' ? '2px solid #C9A96E' : 'none',
       }}
     >
       <div className="flex items-center gap-4">
@@ -122,7 +112,9 @@ export function WineCard({
             alt={name}
             className="w-16 h-16 object-cover"
             style={{ borderRadius: '8px' }}
-            onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+            onError={(e) => {
+              ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE
+            }}
           />
         </div>
 
@@ -134,7 +126,7 @@ export function WineCard({
               fontFamily: "'Playfair Display', serif",
               fontWeight: 600,
               color: '#2A2A2A',
-              lineHeight: '1.3'
+              lineHeight: '1.3',
             }}
           >
             {name}
@@ -143,10 +135,10 @@ export function WineCard({
             className="text-sm mb-3"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              color: '#9A9A9A'
+              color: '#9A9A9A',
             }}
           >
-            {region ?? "—"}
+            {region ?? '—'}
           </p>
 
           {/* Price Labels */}
@@ -169,10 +161,10 @@ export function WineCard({
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
                   color: '#2A2A2A',
-                  fontWeight: 500
+                  fontWeight: 500,
                 }}
               >
-                {marketPrice != null ? `$${marketPrice.toFixed(2)}` : "—"}
+                {marketPrice != null ? `$${marketPrice.toFixed(2)}` : '—'}
               </span>
             </div>
             <div>
@@ -180,7 +172,7 @@ export function WineCard({
                 className="text-sm"
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  color: '#9A9A9A'
+                  color: '#9A9A9A',
                 }}
               >
                 Your Target: ${targetPrice.toFixed(2)}
@@ -205,8 +197,12 @@ export function WineCard({
                 alignItems: 'center',
               }}
               onClick={() => onEdit(id)}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#722F37'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#9A9A9A'; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#722F37'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#9A9A9A'
+              }}
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
@@ -218,14 +214,14 @@ export function WineCard({
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                padding: 0
+                padding: 0,
               }}
               onClick={() => onRemove(id)}
               onMouseEnter={(e) => {
-                e.currentTarget.style.textDecoration = 'underline';
+                e.currentTarget.style.textDecoration = 'underline'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.textDecoration = 'none';
+                e.currentTarget.style.textDecoration = 'none'
               }}
             >
               Remove
@@ -234,5 +230,5 @@ export function WineCard({
         </div>
       </div>
     </div>
-  );
+  )
 }

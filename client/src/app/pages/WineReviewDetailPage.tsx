@@ -9,74 +9,73 @@ import type { Review } from "../components/ReviewCard";
 import { StarRating } from "../components/StarRating";
 import { DeleteReviewModal } from "../components/DeleteReviewModal";
 
-const API_BASE =
-  (import.meta.env.VITE_SERVER_URL || "http://localhost:3000") + "/api/reviews";
+const API_BASE = (import.meta.env.VITE_SERVER_URL || 'http://localhost:3000') + '/api/reviews'
 
 interface WineMeta {
-  wineId: string;
-  name: string;
-  region?: string;
-  vintage?: string;
-  varietal?: string;
-  regularPrice?: number | null;
-  salePrice?: number | null;
-  stock?: number | null;
-  wineUrl?: string;
+  wineId: string
+  name: string
+  region?: string
+  vintage?: string
+  varietal?: string
+  regularPrice?: number | null
+  salePrice?: number | null
+  stock?: number | null
+  wineUrl?: string
 }
 
 interface Aggregates {
-  averageRating: number;
-  reviewCount: number;
-  topNotes: { note: string; count: number }[];
+  averageRating: number
+  reviewCount: number
+  topNotes: { note: string; count: number }[]
 }
 
-type SortOrder = "newest" | "oldest" | "highest" | "lowest";
+type SortOrder = 'newest' | 'oldest' | 'highest' | 'lowest'
 
 export function WineReviewDetailPage() {
-  const { wineId: rawWineId } = useParams<{ wineId: string }>();
-  const wineId = rawWineId ? decodeURIComponent(rawWineId) : "";
-  const { getToken, userId } = useAuth();
+  const { wineId: rawWineId } = useParams<{ wineId: string }>()
+  const wineId = rawWineId ? decodeURIComponent(rawWineId) : ''
+  const { getToken, userId } = useAuth()
 
-  const [wine, setWine] = useState<WineMeta | null>(null);
+  const [wine, setWine] = useState<WineMeta | null>(null)
   const [aggregates, setAggregates] = useState<Aggregates>({
     averageRating: 0,
     reviewCount: 0,
     topNotes: [],
-  });
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  })
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [writeOpen, setWriteOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<ReviewModalInitialValues | null>(null);
   const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
   const fetchReviews = useCallback(async () => {
-    if (!wineId) return;
-    setLoading(true);
-    setError(null);
+    if (!wineId) return
+    setLoading(true)
+    setError(null)
     try {
-      const token = await getToken();
+      const token = await getToken()
       const res = await fetch(
         `${API_BASE}/wines/${encodeURIComponent(wineId)}/reviews?sort=${sortOrder}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.message || "Failed to load reviews");
-      setWine(body.data.wine);
-      setAggregates(body.data.aggregates);
-      setReviews(body.data.reviews);
+      )
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.message || 'Failed to load reviews')
+      setWine(body.data.wine)
+      setAggregates(body.data.aggregates)
+      setReviews(body.data.reviews)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to load reviews");
+      setError(e instanceof Error ? e.message : 'Failed to load reviews')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [wineId, sortOrder, getToken]);
+  }, [wineId, sortOrder, getToken])
 
   useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+    fetchReviews()
+  }, [fetchReviews])
 
   const handleDelete = (reviewId: string) => {
     setDeletingReviewId(reviewId);
@@ -87,24 +86,24 @@ export function WineReviewDetailPage() {
     const reviewId = deletingReviewId;
     setDeletingReviewId(null);
     try {
-      const token = await getToken();
+      const token = await getToken()
       const res = await fetch(`${API_BASE}/${reviewId}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.message || "Failed to delete review");
-      fetchReviews();
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.message || 'Failed to delete review')
+      fetchReviews()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to delete review");
+      setError(e instanceof Error ? e.message : 'Failed to delete review')
     }
-  };
+  }
 
   const displayName = useMemo(() => {
-    if (wine?.name) return wine.name;
-    if (reviews.length > 0) return reviews[0].wineName;
-    return "Wine";
-  }, [wine, reviews]);
+    if (wine?.name) return wine.name
+    if (reviews.length > 0) return reviews[0].wineName
+    return 'Wine'
+  }, [wine, reviews])
 
   return (
     <main className="max-w-4xl mx-auto px-8 py-12">
@@ -113,9 +112,9 @@ export function WineReviewDetailPage() {
         className="inline-flex items-center gap-1.5 mb-6"
         style={{
           fontFamily: "'DM Sans', sans-serif",
-          color: "#722F37",
-          fontSize: "14px",
-          textDecoration: "none",
+          color: '#722F37',
+          fontSize: '14px',
+          textDecoration: 'none',
         }}
       >
         <ArrowLeft className="w-4 h-4" />
@@ -126,10 +125,10 @@ export function WineReviewDetailPage() {
         <div
           className="mb-4 p-3 rounded-lg"
           style={{
-            backgroundColor: "#FDECEE",
-            color: "#C4494F",
+            backgroundColor: '#FDECEE',
+            color: '#C4494F',
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: "13px",
+            fontSize: '13px',
           }}
         >
           {error}
@@ -139,13 +138,13 @@ export function WineReviewDetailPage() {
       {/* Wine header */}
       <div
         className="bg-white p-6 mb-6"
-        style={{ borderRadius: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}
+        style={{ borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
       >
         <h1
           className="text-4xl mb-2"
           style={{
             fontFamily: "'Playfair Display', serif",
-            color: "#722F37",
+            color: '#722F37',
             lineHeight: 1.2,
           }}
         >
@@ -155,8 +154,8 @@ export function WineReviewDetailPage() {
           className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4"
           style={{
             fontFamily: "'DM Sans', sans-serif",
-            color: "#7A7A7A",
-            fontSize: "14px",
+            color: '#7A7A7A',
+            fontSize: '14px',
           }}
         >
           {wine?.region && <span>{wine.region}</span>}
@@ -171,33 +170,32 @@ export function WineReviewDetailPage() {
               <span
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  color: "#2A2A2A",
+                  color: '#2A2A2A',
                   fontWeight: 600,
-                  fontSize: "16px",
+                  fontSize: '16px',
                 }}
               >
                 ${Number(wine.salePrice).toFixed(2)}
               </span>
             )}
-            {wine.regularPrice != null &&
-              wine.regularPrice !== wine.salePrice && (
-                <span
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    color: "#9A9A9A",
-                    fontSize: "14px",
-                    textDecoration: "line-through",
-                  }}
-                >
-                  ${Number(wine.regularPrice).toFixed(2)}
-                </span>
-              )}
+            {wine.regularPrice != null && wine.regularPrice !== wine.salePrice && (
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  color: '#9A9A9A',
+                  fontSize: '14px',
+                  textDecoration: 'line-through',
+                }}
+              >
+                ${Number(wine.regularPrice).toFixed(2)}
+              </span>
+            )}
             {wine.stock != null && (
               <span
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  color: "#7A7A7A",
-                  fontSize: "13px",
+                  color: '#7A7A7A',
+                  fontSize: '13px',
                 }}
               >
                 · {wine.stock} in stock
@@ -209,15 +207,15 @@ export function WineReviewDetailPage() {
         {/* Aggregates */}
         <div
           className="flex flex-wrap items-center gap-6 pt-4 border-t"
-          style={{ borderColor: "#F0F0F0" }}
+          style={{ borderColor: '#F0F0F0' }}
         >
           <div>
             <div
               style={{
                 fontFamily: "'DM Sans', sans-serif",
-                fontSize: "12px",
-                color: "#9A9A9A",
-                marginBottom: "2px",
+                fontSize: '12px',
+                color: '#9A9A9A',
+                marginBottom: '2px',
               }}
             >
               Average rating
@@ -227,8 +225,8 @@ export function WineReviewDetailPage() {
               <span
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "14px",
-                  color: "#2A2A2A",
+                  fontSize: '14px',
+                  color: '#2A2A2A',
                   fontWeight: 600,
                 }}
               >
@@ -237,12 +235,11 @@ export function WineReviewDetailPage() {
               <span
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "13px",
-                  color: "#7A7A7A",
+                  fontSize: '13px',
+                  color: '#7A7A7A',
                 }}
               >
-                ({aggregates.reviewCount}{" "}
-                {aggregates.reviewCount === 1 ? "review" : "reviews"})
+                ({aggregates.reviewCount} {aggregates.reviewCount === 1 ? 'review' : 'reviews'})
               </span>
             </div>
           </div>
@@ -252,9 +249,9 @@ export function WineReviewDetailPage() {
               <div
                 style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: "12px",
-                  color: "#9A9A9A",
-                  marginBottom: "4px",
+                  fontSize: '12px',
+                  color: '#9A9A9A',
+                  marginBottom: '4px',
                 }}
               >
                 Top notes
@@ -265,11 +262,11 @@ export function WineReviewDetailPage() {
                     key={n.note}
                     className="px-3 py-1 rounded-full"
                     style={{
-                      backgroundColor: "#FDF6EE",
-                      color: "#722F37",
+                      backgroundColor: '#FDF6EE',
+                      color: '#722F37',
                       fontFamily: "'DM Sans', sans-serif",
-                      fontSize: "12px",
-                      border: "1px solid #E8D9C4",
+                      fontSize: '12px',
+                      border: '1px solid #E8D9C4',
                     }}
                   >
                     {n.note} · {n.count}
@@ -288,8 +285,8 @@ export function WineReviewDetailPage() {
             htmlFor="sort"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: "13px",
-              color: "#7A7A7A",
+              fontSize: '13px',
+              color: '#7A7A7A',
             }}
           >
             Sort:
@@ -301,10 +298,10 @@ export function WineReviewDetailPage() {
             className="px-3 py-1.5 rounded-lg border bg-white"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: "13px",
-              borderColor: "#E0E0E0",
-              outline: "none",
-              color: "#2A2A2A",
+              fontSize: '13px',
+              borderColor: '#E0E0E0',
+              outline: 'none',
+              color: '#2A2A2A',
             }}
           >
             <option value="newest">Newest</option>
@@ -317,13 +314,13 @@ export function WineReviewDetailPage() {
           onClick={() => setWriteOpen(true)}
           className="flex items-center gap-2 px-5 py-2 rounded-full"
           style={{
-            backgroundColor: "#722F37",
-            color: "#ffffff",
+            backgroundColor: '#722F37',
+            color: '#ffffff',
             fontFamily: "'DM Sans', sans-serif",
-            fontSize: "14px",
+            fontSize: '14px',
             fontWeight: 500,
-            cursor: "pointer",
-            border: "none",
+            cursor: 'pointer',
+            border: 'none',
           }}
         >
           <Plus className="w-4 h-4" />
@@ -337,20 +334,17 @@ export function WineReviewDetailPage() {
           className="text-center py-12"
           style={{
             fontFamily: "'DM Sans', sans-serif",
-            color: "#9A9A9A",
+            color: '#9A9A9A',
           }}
         >
           Loading...
         </div>
       ) : reviews.length === 0 ? (
-        <div
-          className="bg-white p-10 text-center"
-          style={{ borderRadius: "16px" }}
-        >
+        <div className="bg-white p-10 text-center" style={{ borderRadius: '16px' }}>
           <p
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              color: "#7A7A7A",
+              color: '#7A7A7A',
             }}
           >
             Be the first to review this wine.
@@ -400,5 +394,5 @@ export function WineReviewDetailPage() {
         onConfirm={handleConfirmDelete}
       />
     </main>
-  );
+  )
 }

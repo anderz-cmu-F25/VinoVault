@@ -1,8 +1,8 @@
-import { Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Lock } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export function GatedWishlistState() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <div
@@ -17,7 +17,7 @@ export function GatedWishlistState() {
               width: '48px',
               height: '48px',
               color: '#722F37',
-              strokeWidth: 1.5
+              strokeWidth: 1.5,
             }}
           />
         </div>
@@ -29,7 +29,7 @@ export function GatedWishlistState() {
             fontFamily: "'Playfair Display', serif",
             fontSize: '22px',
             color: '#722F37',
-            lineHeight: '1.3'
+            lineHeight: '1.3',
           }}
         >
           Sign in to view your wishlist
@@ -42,7 +42,7 @@ export function GatedWishlistState() {
             fontFamily: "'DM Sans', sans-serif",
             fontSize: '14px',
             color: '#7A7A7A',
-            lineHeight: '1.5'
+            lineHeight: '1.5',
           }}
         >
           Create an account to start tracking wines and get price drop alerts
@@ -62,14 +62,14 @@ export function GatedWishlistState() {
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
             onClick={() => navigate('/login')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5e2529';
+              e.currentTarget.style.backgroundColor = '#5e2529'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#722F37';
+              e.currentTarget.style.backgroundColor = '#722F37'
             }}
           >
             Sign in
@@ -87,14 +87,14 @@ export function GatedWishlistState() {
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
             onClick={() => navigate('/signup')}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(114, 47, 55, 0.05)';
+              e.currentTarget.style.backgroundColor = 'rgba(114, 47, 55, 0.05)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = 'transparent'
             }}
           >
             Create account
@@ -102,5 +102,5 @@ export function GatedWishlistState() {
         </div>
       </div>
     </div>
-  );
+  )
 }

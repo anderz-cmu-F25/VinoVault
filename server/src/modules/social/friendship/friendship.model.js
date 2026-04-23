@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const friendshipSchema = new mongoose.Schema(
   {
@@ -12,9 +12,9 @@ const friendshipSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["NONE", "PENDING", "ACCEPTED", "BLOCKED"],
+      enum: ['NONE', 'PENDING', 'ACCEPTED', 'BLOCKED'],
       required: true,
-      default: "NONE",
+      default: 'NONE',
     },
     requestedBy: {
       type: String,
@@ -26,10 +26,10 @@ const friendshipSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
+)
 
-friendshipSchema.index({ userAId: 1, userBId: 1 }, { unique: true });
+friendshipSchema.index({ userAId: 1, userBId: 1 }, { unique: true })
 
-const FriendshipModel = mongoose.model("Friendship", friendshipSchema);
+const FriendshipModel = mongoose.model('Friendship', friendshipSchema)
 
-module.exports = FriendshipModel;
+module.exports = FriendshipModel
