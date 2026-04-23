@@ -4,37 +4,37 @@ const {
   getSocialEventById,
   joinSocialEvent,
   leaveSocialEvent,
-} = require("./socialEvent.service");
+} = require('./socialEvent.service')
 
 async function createEvent(req, res, next) {
   try {
-    const currentUserId = req.auth.userId;
+    const currentUserId = req.auth.userId
 
     if (!currentUserId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: 'Unauthorized' })
     }
 
-    const event = await createSocialEvent(currentUserId, req.body);
+    const event = await createSocialEvent(currentUserId, req.body)
 
     return res.status(201).json({
-      message: "Event created successfully",
+      message: 'Event created successfully',
       data: event,
-    });
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
 }
 
 async function getEvents(req, res, next) {
   try {
-    const currentUserId = req.auth.userId;
-    const events = await getAllSocialEvents(currentUserId);
+    const currentUserId = req.auth.userId
+    const events = await getAllSocialEvents(currentUserId)
 
     return res.status(200).json({
       data: events,
-    });
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
 }
 
@@ -46,49 +46,49 @@ async function getEventDetails(req, res, next) {
 
     return res.status(200).json({
       data: event,
-    });
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
 }
 
 async function joinEvent(req, res, next) {
   try {
-    const currentUserId = req.auth.userId;
-    const eventId = req.params.eventId;
+    const currentUserId = req.auth.userId
+    const eventId = req.params.eventId
 
     if (!currentUserId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: 'Unauthorized' })
     }
 
-    const event = await joinSocialEvent(currentUserId, eventId);
+    const event = await joinSocialEvent(currentUserId, eventId)
 
     return res.status(200).json({
-      message: "Joined event successfully",
+      message: 'Joined event successfully',
       data: event,
-    });
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
 }
 
 async function leaveEvent(req, res, next) {
   try {
-    const currentUserId = req.auth.userId;
-    const eventId = req.params.eventId;
+    const currentUserId = req.auth.userId
+    const eventId = req.params.eventId
 
     if (!currentUserId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: 'Unauthorized' })
     }
 
-    const event = await leaveSocialEvent(currentUserId, eventId);
+    const event = await leaveSocialEvent(currentUserId, eventId)
 
     return res.status(200).json({
-      message: "Left event successfully",
+      message: 'Left event successfully',
       data: event,
-    });
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
 }
 
@@ -98,4 +98,4 @@ module.exports = {
   getEventDetails,
   joinEvent,
   leaveEvent,
-};
+}

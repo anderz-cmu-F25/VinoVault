@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const notificationPreferenceSchema = new mongoose.Schema(
   {
@@ -17,11 +17,11 @@ const notificationPreferenceSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
 const NotificationPreferenceModel = mongoose.model(
-  "NotificationPreference",
+  'NotificationPreference',
   notificationPreferenceSchema
-);
+)
 
-module.exports = NotificationPreferenceModel;
+module.exports = NotificationPreferenceModel
