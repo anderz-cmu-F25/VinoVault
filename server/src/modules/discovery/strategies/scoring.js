@@ -3,10 +3,12 @@ function parseRating(value) {
   return Number.isFinite(rating) ? rating : 0
 }
 
+// Prefer sale price when available so ranking logic uses what the user would pay now.
 function currentPrice(wine) {
   return wine.salePrice ?? wine.regularPrice ?? null
 }
 
+// Normalize prices into coarse buckets for filtering and preference matching.
 function priceBucket(price) {
   if (price == null) return 'unknown'
   if (price < 30) return 'under-30'
@@ -15,12 +17,14 @@ function priceBucket(price) {
   return '100-plus'
 }
 
+// Reward discounted wines, capped so sales help but do not dominate ranking.
 function saleBoost(wine) {
   if (wine.salePrice == null || wine.regularPrice == null) return 0
   if (wine.salePrice >= wine.regularPrice) return 0
   return Math.min(10, ((wine.regularPrice - wine.salePrice) / wine.regularPrice) * 20)
 }
 
+// Attach review-derived signals to raw wine documents before scoring.
 function withReviewStats(wines, statsMap) {
   return wines.map((wine) => {
     const stats = statsMap.get(wine.wineId) || {}
@@ -33,6 +37,7 @@ function withReviewStats(wines, statsMap) {
   })
 }
 
+// Shape the final response object returned to the frontend across all strategies.
 function publicWine(wine, reason, score) {
   return {
     wineId: wine.wineId,

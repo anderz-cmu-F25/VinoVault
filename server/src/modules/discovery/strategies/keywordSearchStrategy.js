@@ -13,6 +13,7 @@ class KeywordSearchStrategy extends RecommendationStrategy {
     this.repository = repository
   }
 
+  // Score how strongly the query matches the wine name.
   matchScore(wine, query) {
     const name = normalize(wine.name)
     const q = normalize(query)
@@ -26,6 +27,7 @@ class KeywordSearchStrategy extends RecommendationStrategy {
     return matchedTerms ? 35 + (matchedTerms / terms.length) * 25 : 0
   }
 
+  // Convert a numeric match strength into a user-facing explanation.
   reasonFor(score) {
     if (score >= 95) return 'Exact name match'
     if (score >= 80) return 'Strong name match'
@@ -33,6 +35,7 @@ class KeywordSearchStrategy extends RecommendationStrategy {
     return 'Related keyword match'
   }
 
+  // Search-oriented ranking: filter by text match, then break ties with quality.
   async recommend(input) {
     const query = String(input.search || input.q || '').trim()
     const page = Math.max(1, Number(input.page || 1) || 1)

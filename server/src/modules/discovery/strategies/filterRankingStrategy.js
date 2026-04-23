@@ -7,6 +7,8 @@ class FilterRankingStrategy extends RecommendationStrategy {
     this.repository = repository
   }
 
+  // Heuristic browse score that balances quality, confidence, availability,
+  // and value for open-ended discovery.
   scoreWine(wine) {
     let score = 0
     const rating = wine.averageRating || parseRating(wine.rating)
@@ -24,6 +26,7 @@ class FilterRankingStrategy extends RecommendationStrategy {
     return score
   }
 
+  // Explain why a wine surfaced near the top of the browse results.
   reasonFor(wine) {
     if (wine.salePrice != null && wine.regularPrice != null && wine.salePrice < wine.regularPrice) {
       return 'Strong value pick from the catalog'
@@ -37,6 +40,7 @@ class FilterRankingStrategy extends RecommendationStrategy {
     return 'Balanced pick for open-ended discovery'
   }
 
+  // Default discovery mode: rank filtered candidates and paginate the results.
   async recommend(input) {
     const page = Math.max(1, Number(input.page || 1) || 1)
     const limit = Math.min(60, Math.max(1, Number(input.limit || 24) || 24))
