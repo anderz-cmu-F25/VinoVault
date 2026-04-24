@@ -67,6 +67,7 @@ type SocialEvent = {
   hostUserId?: string
   description?: string
   joined?: boolean
+  isPast?: boolean
 }
 
 function normalizeRelationshipState(raw: any, currentUserId?: string | null): RelationshipState {
@@ -141,7 +142,7 @@ export function SocialPage() {
 
   const [friendSearch, setFriendSearch] = useState('')
   const [usernameSearch, setUsernameSearch] = useState('')
-  const [eventFilter, setEventFilter] = useState<'All' | 'Joined' | 'Open'>('All')
+  const [eventFilter, setEventFilter] = useState<'All' | 'Joined' | 'Open' | 'Past'>('All')
 
   const [friends, setFriends] = useState<Friend[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
@@ -285,11 +286,19 @@ export function SocialPage() {
 
   const filteredEvents = useMemo(() => {
     if (eventFilter === 'Joined') {
-      return events.filter((event) => event.joined || isCurrentUsersEvent(event))
+      return events.filter(
+        (event) => !event.isPast && (event.joined || isCurrentUsersEvent(event))
+      )
     }
 
     if (eventFilter === 'Open') {
-      return events.filter((event) => !event.joined && !isCurrentUsersEvent(event))
+      return events.filter(
+        (event) => !event.isPast && !event.joined && !isCurrentUsersEvent(event)
+      )
+    }
+
+    if (eventFilter === 'Past') {
+      return events.filter((event) => event.isPast)
     }
 
     return events
@@ -401,7 +410,9 @@ export function SocialPage() {
       const rawEvents = Array.isArray(result.data) ? result.data : result.data?.events || []
 
       const mappedEvents: SocialEvent[] = rawEvents.map((event: any) => {
-        const { date, time } = formatEventDateTime(event.eventDate || event.date || event.createdAt)
+        const rawDate = event.eventDate || event.date || event.createdAt
+        const { date, time } = formatEventDateTime(rawDate)
+        const isPast = rawDate ? new Date(rawDate) < new Date() : false
 
         return {
           id: event._id || event.id,
@@ -418,6 +429,7 @@ export function SocialPage() {
           hostUserId: event.hostUserId || event.hostId || event.createdBy || event.userId,
           description: event.details || event.description,
           joined: Boolean(event.joined ?? event.isJoined ?? false),
+          isPast,
         }
       })
 
@@ -600,7 +612,9 @@ export function SocialPage() {
       const result = await authJsonFetch(`${API_BASE}/events/${eventId}`)
       const event = result.data?.event || result.data
 
-      const { date, time } = formatEventDateTime(event.eventDate || event.date || event.createdAt)
+      const rawDate = event.eventDate || event.date || event.createdAt
+      const { date, time } = formatEventDateTime(rawDate)
+      const isPast = rawDate ? new Date(rawDate) < new Date() : false
 
       setSelectedEvent({
         id: event._id || event.id,
@@ -613,6 +627,7 @@ export function SocialPage() {
         hostUserId: event.hostUserId || event.hostId || event.createdBy || event.userId,
         description: event.details || event.description,
         joined: Boolean(event.joined ?? event.isJoined ?? false),
+        isPast,
       })
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to load event details.')
@@ -1383,7 +1398,7 @@ export function SocialPage() {
                   gap: '10px',
                 }}
               >
-                {(['All', 'Joined', 'Open'] as const).map((label) => (
+                {(['All', 'Joined', 'Open', 'Past'] as const).map((label) => (
                   <button
                     key={label}
                     onClick={() => setEventFilter(label)}
@@ -1441,32 +1456,56 @@ export function SocialPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {filteredEvents.map((event) => {
                   const isHost = isCurrentUsersEvent(event)
+                  const isPast = event.isPast
 
                   return (
                     <div
                       key={event.id}
                       style={{
-                        border: '1px solid #ECE6DF',
+                        border: `1px solid ${isPast ? '#E0DADA' : '#ECE6DF'}`,
                         borderRadius: '26px',
                         padding: '22px',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: isPast ? '#F7F5F5' : '#FFFFFF',
                         display: 'grid',
                         gridTemplateColumns: '1fr 220px',
                         gap: '20px',
                         alignItems: 'stretch',
+                        opacity: isPast ? 0.75 : 1,
                       }}
                     >
                       <div>
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontFamily: "'Playfair Display', serif",
-                            fontSize: '22px',
-                            color: '#382525',
-                          }}
-                        >
-                          {event.title}
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <h3
+                            style={{
+                              margin: 0,
+                              fontFamily: "'Playfair Display', serif",
+                              fontSize: '22px',
+                              color: isPast ? '#9A8F8F' : '#382525',
+                            }}
+                          >
+                            {event.title}
+                          </h3>
+                          {isPast && (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                height: '22px',
+                                padding: '0 10px',
+                                borderRadius: '999px',
+                                backgroundColor: '#E8E2E2',
+                                color: '#8A7F7F',
+                                fontFamily: "'DM Sans', sans-serif",
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                letterSpacing: '0.05em',
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              Past
+                            </span>
+                          )}
+                        </div>
 
                         {event.description && (
                           <p
@@ -1578,7 +1617,7 @@ export function SocialPage() {
                             View Details
                           </button>
 
-                          {!isHost && (
+                          {!isHost && !isPast && (
                             <button
                               onClick={() => handleToggleJoin(event.id)}
                               style={{
@@ -1799,16 +1838,38 @@ export function SocialPage() {
               boxShadow: '0 28px 60px rgba(0,0,0,0.12)',
             }}
           >
-            <h2
-              style={{
-                margin: 0,
-                fontFamily: "'Playfair Display', serif",
-                fontSize: '30px',
-                color: '#722F37',
-              }}
-            >
-              {selectedEvent.title}
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <h2
+                style={{
+                  margin: 0,
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: '30px',
+                  color: selectedEvent.isPast ? '#9A8F8F' : '#722F37',
+                }}
+              >
+                {selectedEvent.title}
+              </h2>
+              {selectedEvent.isPast && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    height: '24px',
+                    padding: '0 12px',
+                    borderRadius: '999px',
+                    backgroundColor: '#E8E2E2',
+                    color: '#8A7F7F',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Past
+                </span>
+              )}
+            </div>
 
             <div
               style={{
@@ -1862,7 +1923,7 @@ export function SocialPage() {
                 Close
               </button>
 
-              {!isCurrentUsersEvent(selectedEvent) && (
+              {!isCurrentUsersEvent(selectedEvent) && !selectedEvent.isPast && (
                 <button
                   onClick={() => handleToggleJoin(selectedEvent.id)}
                   style={{
