@@ -1,5 +1,6 @@
 import { X, Search, ImagePlus, Trash2 } from 'lucide-react'
-import { useState, useEffect, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { DragEvent, ClipboardEvent } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
