@@ -15,11 +15,9 @@
 import { connectDB } from './db'
 import { Wishlist } from './models/Wishlist'
 import { Wine } from './models/Wine'
-import './models/User'
 import { Notification } from './models/Notification'
 import { sendPriceAlertEmail } from './email'
 import { fetchWinePrice } from './priceFetcher'
-import { getReadyWinesByEmail } from '../server/src/modules/inventory/cellar.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -31,7 +29,6 @@ export interface PriceDropEvent {
   currentPrice: number
   targetPrice: number
   wineUrl: string
-  readyWines?: { wineName: string; vintage?: number | null; quantity?: number }[]
 }
 
 export interface PriceDropObserver {
@@ -65,7 +62,6 @@ export class EmailObserver implements PriceDropObserver {
         targetPrice: event.targetPrice,
         currentPrice: event.currentPrice,
         wineUrl: event.wineUrl,
-        readyWines: event.readyWines ?? [],
       })
       console.log(`[EmailObserver] Email sent to ${event.email}`)
     } catch (err) {
@@ -174,29 +170,6 @@ export async function runMonitor(): Promise<MonitorResult> {
 
   let alerted = 0
 
-  // Pre-fetch ready-to-drink wines per unique email to avoid repeated DB calls
-  const uniqueEmails = [...new Set(pendingItems.map((i) => i.email))]
-  const readyWinesMap = new Map<
-    string,
-    { wineName: string; vintage?: number | null; quantity?: number }[]
-  >()
-  for (const email of uniqueEmails) {
-    try {
-      const entries = await getReadyWinesByEmail(email)
-      readyWinesMap.set(
-        email,
-        entries.map((e: { wineName: string; vintage?: number | null; quantity?: number }) => ({
-          wineName: e.wineName,
-          vintage: e.vintage ?? null,
-          quantity: e.quantity,
-        }))
-      )
-    } catch (err) {
-      console.error(`[monitor] Failed to fetch ready wines for ${email}:`, err)
-      readyWinesMap.set(email, [])
-    }
-  }
-
   for (const item of pendingItems) {
     try {
       const wine = await Wine.findOne({ wineId: item.wineId })
@@ -217,7 +190,6 @@ export async function runMonitor(): Promise<MonitorResult> {
           currentPrice: wine.salePrice,
           targetPrice: item.targetPrice,
           wineUrl,
-          readyWines: readyWinesMap.get(item.email) ?? [],
         })
         console.log(`[monitor] Alerted ${item.email} for "${wine.name}" @ $${wine.salePrice}`)
         alerted++
