@@ -210,4 +210,3 @@ describe('searchWinesCatalog', () => {
     expect(repository.searchWines).toHaveBeenCalledWith('Barolo')
   })
 })
-
