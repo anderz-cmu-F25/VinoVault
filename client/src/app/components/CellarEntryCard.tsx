@@ -151,27 +151,28 @@ export function CellarEntryCard({
             {notes}
           </p>
         )}
-
-        {noteImages && noteImages.length > 0 && (
-          <div style={{ display: 'flex', gap: '5px', marginTop: '8px', flexWrap: 'wrap' }}>
-            {noteImages.slice(0, 5).map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt={`Note photo ${i + 1}`}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '6px',
-                  objectFit: 'cover',
-                  border: '1px solid #E0D8D0',
-                  flexShrink: 0,
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Note images */}
+      {noteImages && noteImages.length > 0 && (
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {noteImages.slice(0, 3).map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt={`Note photo ${i + 1}`}
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '10px',
+                objectFit: 'cover',
+                border: '1px solid #E0D8D0',
+                flexShrink: 0,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex-shrink-0 flex items-center gap-2">
