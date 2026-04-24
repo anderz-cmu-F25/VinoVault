@@ -30,6 +30,9 @@ class Builder {
   setNotes(notes) {
     throw new Error('setNotes() not implemented')
   }
+  setNoteImages(images) {
+    throw new Error('setNoteImages() not implemented')
+  }
   getResult() {
     throw new Error('getResult() not implemented')
   }

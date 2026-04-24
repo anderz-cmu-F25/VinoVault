@@ -53,6 +53,10 @@ const cellarEntrySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    noteImages: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 )

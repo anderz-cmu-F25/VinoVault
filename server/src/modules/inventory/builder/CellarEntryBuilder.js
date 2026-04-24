@@ -21,6 +21,7 @@ class CellarEntryBuilder extends Builder {
       storageLocation: null,
       status: 'storing',
       notes: null,
+      noteImages: [],
     }
     return this
   }
@@ -73,6 +74,11 @@ class CellarEntryBuilder extends Builder {
 
   setNotes(notes) {
     this.entry.notes = notes
+    return this
+  }
+
+  setNoteImages(images) {
+    this.entry.noteImages = Array.isArray(images) ? images : []
     return this
   }
 

@@ -18,6 +18,7 @@ interface CellarEntry {
   storageLocation?: string
   status: 'storing' | 'ready' | 'consumed'
   notes?: string
+  noteImages?: string[]
   purchaseDate?: string
 }
 
@@ -234,6 +235,7 @@ export function CellarPage() {
                 storageLocation={entry.storageLocation}
                 status={entry.status}
                 notes={entry.notes}
+                noteImages={entry.noteImages}
                 onEdit={handleEdit}
                 onDelete={(id) => setDeleteConfirmId(id)}
               />

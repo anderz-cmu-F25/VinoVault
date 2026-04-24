@@ -54,6 +54,7 @@ const MOCK_ENTRY = {
   wineName: 'Margaux',
   quantity: 3,
   status: 'storing',
+  noteImages: [],
 }
 
 const MOCK_WINE = { _id: 'wine_1', wineName: 'Margaux' }
