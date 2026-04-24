@@ -6,29 +6,32 @@ class Builder {
   reset() {
     throw new Error('reset() not implemented')
   }
-  setUser(userId) {
+  setUser(_userId) {
     throw new Error('setUser() not implemented')
   }
-  setWineInfo(wineId, name, winery, type, region) {
+  setWineInfo(_wineId, _name, _winery, _type, _region) {
     throw new Error('setWineInfo() not implemented')
   }
-  setVintage(vintage) {
+  setVintage(_vintage) {
     throw new Error('setVintage() not implemented')
   }
-  setQuantity(quantity) {
+  setQuantity(_quantity) {
     throw new Error('setQuantity() not implemented')
   }
-  setPurchaseDate(date) {
+  setPurchaseDate(_date) {
     throw new Error('setPurchaseDate() not implemented')
   }
-  setStorageLocation(location) {
+  setStorageLocation(_location) {
     throw new Error('setStorageLocation() not implemented')
   }
-  setStatus(status) {
+  setStatus(_status) {
     throw new Error('setStatus() not implemented')
   }
-  setNotes(notes) {
+  setNotes(_notes) {
     throw new Error('setNotes() not implemented')
+  }
+  setNoteImages(_images) {
+    throw new Error('setNoteImages() not implemented')
   }
   getResult() {
     throw new Error('getResult() not implemented')

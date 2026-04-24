@@ -13,6 +13,7 @@ class Director {
     if (fields.storageLocation !== undefined) builder.setStorageLocation(fields.storageLocation)
     if (fields.status !== undefined) builder.setStatus(fields.status)
     if (fields.notes !== undefined) builder.setNotes(fields.notes)
+    if (fields.noteImages !== undefined) builder.setNoteImages(fields.noteImages)
     return builder.getResult()
   }
 
@@ -29,6 +30,7 @@ class Director {
     if (fields.storageLocation !== undefined) builder.setStorageLocation(fields.storageLocation)
     if (fields.status !== undefined) builder.setStatus(fields.status)
     if (fields.notes !== undefined) builder.setNotes(fields.notes)
+    if (fields.noteImages !== undefined) builder.setNoteImages(fields.noteImages)
     return builder.getResult()
   }
 
@@ -54,6 +56,7 @@ class Director {
       builder.setStorageLocation(changedFields.storageLocation)
     if (changedFields.status !== undefined) builder.setStatus(changedFields.status)
     if (changedFields.notes !== undefined) builder.setNotes(changedFields.notes)
+    if (changedFields.noteImages !== undefined) builder.setNoteImages(changedFields.noteImages)
     return builder.getResult()
   }
 }

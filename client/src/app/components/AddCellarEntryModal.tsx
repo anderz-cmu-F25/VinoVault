@@ -1,5 +1,6 @@
-import { X, Search } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { X, Search, ImagePlus, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { DragEvent, ClipboardEvent } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
@@ -112,6 +113,9 @@ const SAMPLE_WINES: WineResult[] = [
   },
 ]
 
+const MAX_IMAGES = 5
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024 // 2 MB per image
+
 interface CellarEntryData {
   _id?: string
   wineName: string
@@ -124,6 +128,7 @@ interface CellarEntryData {
   storageLocation?: string
   status?: 'storing' | 'ready' | 'consumed'
   notes?: string
+  noteImages?: string[]
 }
 
 interface AddCellarEntryModalProps {
@@ -154,6 +159,63 @@ export function AddCellarEntryModal({
   const [isManual, setIsManual] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [noteImages, setNoteImages] = useState<string[]>([])
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const readFileAsDataURL = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      if (file.size > MAX_IMAGE_BYTES) {
+        reject(new Error(`"${file.name}" exceeds the 2 MB limit.`))
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(new Error('Failed to read image.'))
+      reader.readAsDataURL(file)
+    })
+
+  const addImages = useCallback(
+    async (files: FileList | File[]) => {
+      const incoming = Array.from(files).filter((f) => f.type.startsWith('image/'))
+      const slots = MAX_IMAGES - noteImages.length
+      if (slots <= 0) return
+      const toProcess = incoming.slice(0, slots)
+      try {
+        const dataUrls = await Promise.all(toProcess.map(readFileAsDataURL))
+        setNoteImages((prev) => [...prev, ...dataUrls])
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Could not load image.')
+      }
+    },
+    [noteImages.length]
+  )
+
+  function removeImage(index: number) {
+    setNoteImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  function handleDragLeave() {
+    setIsDragging(false)
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files.length) addImages(e.dataTransfer.files)
+  }
+
+  function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    const items = Array.from(e.clipboardData.items).filter((i) => i.type.startsWith('image/'))
+    if (items.length === 0) return
+    const files = items.map((i) => i.getAsFile()).filter(Boolean) as File[]
+    addImages(files)
+  }
 
   const searchResults =
     searchQuery.trim().length > 0
@@ -192,6 +254,7 @@ export function AddCellarEntryModal({
         status: editEntry.status || 'storing',
         notes: editEntry.notes || '',
       })
+      setNoteImages(editEntry.noteImages ?? [])
       setIsManual(true)
     } else if (isOpen && !editEntry) {
       resetForm()
@@ -215,6 +278,8 @@ export function AddCellarEntryModal({
     setShowDropdown(false)
     setIsManual(false)
     setErrorMsg('')
+    setNoteImages([])
+    setIsDragging(false)
   }
 
   function handleClose() {
@@ -270,6 +335,7 @@ export function AddCellarEntryModal({
         storageLocation: form.storageLocation.trim() || undefined,
         status: form.status,
         notes: form.notes.trim() || undefined,
+        noteImages,
       }
 
       const url = isEditMode
@@ -534,15 +600,139 @@ export function AddCellarEntryModal({
                 </div>
               </div>
 
+              {/* Notes + Images */}
               <div>
                 <label style={labelStyle}>Notes</label>
                 <textarea
-                  placeholder="Tasting notes, occasion, etc."
+                  placeholder="Tasting notes, occasion, etc. — paste an image directly here."
                   value={form.notes}
                   onChange={(e) => setField('notes', e.target.value)}
+                  onPaste={handlePaste}
                   rows={3}
                   style={{ ...inputStyle, resize: 'none' }}
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between" style={{ marginBottom: '6px' }}>
+                  <label style={labelStyle}>
+                    Photos ({noteImages.length}/{MAX_IMAGES})
+                  </label>
+                  {noteImages.length < MAX_IMAGES && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#722F37',
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <ImagePlus className="w-3.5 h-3.5" />
+                      Choose from device
+                    </button>
+                  )}
+                </div>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files) addImages(e.target.files)
+                    e.target.value = ''
+                  }}
+                />
+
+                {/* Drop zone — shown when no images or always as upload area */}
+                {noteImages.length < MAX_IMAGES && (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      border: `2px dashed ${isDragging ? '#722F37' : '#E0D8D0'}`,
+                      borderRadius: '10px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: isDragging ? '#FDF6EE' : '#FAFAFA',
+                      transition: 'all 0.15s ease',
+                      marginBottom: noteImages.length > 0 ? '10px' : '0',
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: '13px',
+                        color: '#9A9A9A',
+                        margin: 0,
+                      }}
+                    >
+                      Drag & drop images here, or paste from clipboard
+                    </p>
+                  </div>
+                )}
+
+                {/* Image previews */}
+                {noteImages.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {noteImages.map((src, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          position: 'relative',
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: '1px solid #E0D8D0',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <img
+                          src={src}
+                          alt={`Note photo ${i + 1}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeImage(i)
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: '3px',
+                            right: '3px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: 'rgba(0,0,0,0.55)',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
+                          }}
+                        >
+                          <Trash2 style={{ width: '11px', height: '11px', color: '#fff' }} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}

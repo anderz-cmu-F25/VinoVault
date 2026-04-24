@@ -13,9 +13,6 @@
  *    throws if entry not found or not owned by the requesting user
  *  - searchWinesCatalog: returns empty array for blank/short query,
  *    delegates to repository.searchWines for valid queries
- *  - getReadyWinesByEmail: returns empty array if user not found,
- *    looks up clerkId from User model by email, then delegates to
- *    repository.findReadyEntriesByUserId
  *
  * All repository and builder calls are mocked so the service logic is
  * tested in isolation from the database.
@@ -24,8 +21,6 @@
 jest.mock('../../server/src/modules/inventory/cellar.repository', () => ({
   findAllByUserId: jest.fn(),
   findEntryById: jest.fn(),
-  findReadyEntriesByUserId: jest.fn(),
-  findUserByEmail: jest.fn(),
   createEntry: jest.fn(),
   updateEntry: jest.fn(),
   deleteEntry: jest.fn(),
@@ -50,7 +45,6 @@ const {
   editEntry,
   removeEntry,
   searchWinesCatalog,
-  getReadyWinesByEmail,
 } = require('../../server/src/modules/inventory/cellar.service')
 
 const MOCK_ENTRY = {
@@ -60,6 +54,7 @@ const MOCK_ENTRY = {
   wineName: 'Margaux',
   quantity: 3,
   status: 'storing',
+  noteImages: [],
 }
 
 const MOCK_WINE = { _id: 'wine_1', wineName: 'Margaux' }
@@ -79,9 +74,6 @@ beforeEach(() => {
   repository.deleteEntry.mockResolvedValue(MOCK_ENTRY)
   repository.findOrCreateWine.mockResolvedValue(MOCK_WINE)
   repository.searchWines.mockResolvedValue([MOCK_WINE])
-  repository.findUserByEmail.mockResolvedValue({ clerkId: 'user_1', email: 'test@example.com' })
-  repository.findReadyEntriesByUserId.mockResolvedValue([])
-
   // Builder mock: reset returns this, getResult returns entry data
   const builderInstance = {
     reset: jest.fn().mockReturnThis(),
@@ -217,34 +209,5 @@ describe('searchWinesCatalog', () => {
   test('trims whitespace from query before searching', async () => {
     await searchWinesCatalog('  Barolo  ')
     expect(repository.searchWines).toHaveBeenCalledWith('Barolo')
-  })
-})
-
-// ─────────────────────────────────────────
-// getReadyWinesByEmail
-// ─────────────────────────────────────────
-describe('getReadyWinesByEmail', () => {
-  const READY_ENTRIES = [
-    { ...MOCK_ENTRY, status: 'ready', wineName: 'Margaux' },
-    { ...MOCK_ENTRY, _id: 'entry_2', status: 'ready', wineName: 'Opus One' },
-  ]
-
-  test('returns empty array if user is not found', async () => {
-    repository.findUserByEmail.mockResolvedValue(null)
-    const result = await getReadyWinesByEmail('unknown@example.com')
-    expect(result).toEqual([])
-    expect(repository.findReadyEntriesByUserId).not.toHaveBeenCalled()
-  })
-
-  test('looks up user by email and queries ready entries by clerkId', async () => {
-    await getReadyWinesByEmail('test@example.com')
-    expect(repository.findUserByEmail).toHaveBeenCalledWith('test@example.com')
-    expect(repository.findReadyEntriesByUserId).toHaveBeenCalledWith('user_1')
-  })
-
-  test('returns the ready entries for the user', async () => {
-    repository.findReadyEntriesByUserId.mockResolvedValue(READY_ENTRIES)
-    const result = await getReadyWinesByEmail('test@example.com')
-    expect(result).toEqual(READY_ENTRIES)
   })
 })

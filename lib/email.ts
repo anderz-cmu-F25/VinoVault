@@ -14,19 +14,12 @@ function createTransporter() {
   } as SMTPOptions)
 }
 
-interface ReadyWine {
-  wineName: string
-  vintage?: number | null
-  quantity?: number
-}
-
 interface PriceAlertEmailParams {
   email: string
   wineName: string
   targetPrice: number
   currentPrice: number
   wineUrl: string
-  readyWines?: ReadyWine[]
 }
 
 function buildHtml({
@@ -34,7 +27,6 @@ function buildHtml({
   targetPrice,
   currentPrice,
   wineUrl,
-  readyWines = [],
 }: Omit<PriceAlertEmailParams, 'email'>): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -104,35 +96,6 @@ function buildHtml({
             </td>
           </tr>
 
-          ${
-            readyWines.length > 0
-              ? `
-          <!-- Ready to Drink Reminder -->
-          <tr>
-            <td style="padding:0 40px 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf6ee;border:1px solid #e8ddd4;border-radius:6px;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 12px;font-size:14px;font-weight:bold;color:#7B1E2B;letter-spacing:0.3px;">🍾 Ready to Drink in Your Cellar</p>
-                    <p style="margin:0 0 14px;font-size:13px;color:#666666;line-height:1.5;">
-                      These wines in your cellar are at peak drinking condition — don't wait too long!
-                    </p>
-                    ${readyWines
-                      .map(
-                        (w) => `
-                    <p style="margin:0 0 6px;font-size:13px;color:#2c2c2c;">
-                      · <strong>${w.wineName}</strong>${w.vintage ? ` (${w.vintage})` : ''}${w.quantity ? ` — ${w.quantity} ${w.quantity === 1 ? 'bottle' : 'bottles'}` : ''}
-                    </p>`
-                      )
-                      .join('')}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>`
-              : ''
-          }
-
           <!-- Footer -->
           <tr>
             <td style="padding:20px 40px 32px;border-top:1px solid #f0e8e0;">
@@ -157,7 +120,6 @@ export async function sendPriceAlertEmail({
   targetPrice,
   currentPrice,
   wineUrl,
-  readyWines = [],
 }: PriceAlertEmailParams): Promise<void> {
   try {
     console.log(`[email] Sending price alert to ${email} for "${wineName}"`)
@@ -165,7 +127,7 @@ export async function sendPriceAlertEmail({
       from: process.env.SMTP_FROM,
       to: email,
       subject: `🚨 Price Drop Alert: ${wineName} has reached your target price!`,
-      html: buildHtml({ wineName, targetPrice, currentPrice, wineUrl, readyWines }),
+      html: buildHtml({ wineName, targetPrice, currentPrice, wineUrl }),
     })
     console.log(`[email] Price alert sent successfully to ${email}`)
   } catch (error) {
