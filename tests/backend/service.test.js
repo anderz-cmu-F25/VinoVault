@@ -73,9 +73,6 @@ beforeEach(() => {
   repository.deleteEntry.mockResolvedValue(MOCK_ENTRY)
   repository.findOrCreateWine.mockResolvedValue(MOCK_WINE)
   repository.searchWines.mockResolvedValue([MOCK_WINE])
-  repository.findUserByEmail.mockResolvedValue({ clerkId: 'user_1', email: 'test@example.com' })
-  repository.findReadyEntriesByUserId.mockResolvedValue([])
-
   // Builder mock: reset returns this, getResult returns entry data
   const builderInstance = {
     reset: jest.fn().mockReturnThis(),
