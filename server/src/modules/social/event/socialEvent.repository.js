@@ -16,9 +16,14 @@ async function saveEvent(event) {
   return event.save()
 }
 
+async function deleteEventById(eventId) {
+  return SocialEventModel.findByIdAndDelete(eventId)
+}
+
 module.exports = {
   createEvent,
   findEventById,
   findAllEvents,
   saveEvent,
+  deleteEventById,
 }

@@ -21,6 +21,7 @@ const {
   getEventDetails,
   joinEvent,
   leaveEvent,
+  deleteEvent,
 } = require('./event/socialEvent.controller')
 
 const router = express.Router()
@@ -44,5 +45,6 @@ router.get('/events', authMiddleware, getEvents)
 router.get('/events/:eventId', authMiddleware, getEventDetails)
 router.post('/events/:eventId/join', authMiddleware, joinEvent)
 router.post('/events/:eventId/leave', authMiddleware, leaveEvent)
+router.delete('/events/:eventId', authMiddleware, deleteEvent)
 
 module.exports = router

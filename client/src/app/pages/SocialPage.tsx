@@ -286,15 +286,11 @@ export function SocialPage() {
 
   const filteredEvents = useMemo(() => {
     if (eventFilter === 'Joined') {
-      return events.filter(
-        (event) => !event.isPast && (event.joined || isCurrentUsersEvent(event))
-      )
+      return events.filter((event) => !event.isPast && (event.joined || isCurrentUsersEvent(event)))
     }
 
     if (eventFilter === 'Open') {
-      return events.filter(
-        (event) => !event.isPast && !event.joined && !isCurrentUsersEvent(event)
-      )
+      return events.filter((event) => !event.isPast && !event.joined && !isCurrentUsersEvent(event))
     }
 
     if (eventFilter === 'Past') {
@@ -631,6 +627,20 @@ export function SocialPage() {
       })
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to load event details.')
+    }
+  }
+
+  async function handleDeleteEvent(eventId: string) {
+    if (!window.confirm('Are you sure you want to delete this event? This cannot be undone.'))
+      return
+
+    try {
+      setErrorMessage('')
+      await authJsonFetch(`${API_BASE}/events/${eventId}`, { method: 'DELETE' })
+      if (selectedEvent?.id === eventId) setSelectedEvent(null)
+      await loadEvents()
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to delete event.')
     }
   }
 
@@ -1474,7 +1484,14 @@ export function SocialPage() {
                       }}
                     >
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            flexWrap: 'wrap',
+                          }}
+                        >
                           <h3
                             style={{
                               margin: 0,
@@ -1634,6 +1651,26 @@ export function SocialPage() {
                               }}
                             >
                               {event.joined ? 'Leave Event' : 'Join Event'}
+                            </button>
+                          )}
+
+                          {isHost && (
+                            <button
+                              onClick={() => handleDeleteEvent(event.id)}
+                              style={{
+                                width: '100%',
+                                height: '42px',
+                                borderRadius: '999px',
+                                backgroundColor: 'transparent',
+                                color: '#B23B3B',
+                                border: '1px solid #E5C8C8',
+                                fontFamily: "'DM Sans', sans-serif",
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Delete Event
                             </button>
                           )}
                         </div>
@@ -1940,6 +1977,26 @@ export function SocialPage() {
                   }}
                 >
                   {selectedEvent.joined ? 'Leave Event' : 'Join Event'}
+                </button>
+              )}
+
+              {isCurrentUsersEvent(selectedEvent) && (
+                <button
+                  onClick={() => handleDeleteEvent(selectedEvent.id)}
+                  style={{
+                    height: '46px',
+                    borderRadius: '999px',
+                    border: '1px solid #E5C8C8',
+                    backgroundColor: 'transparent',
+                    color: '#B23B3B',
+                    padding: '0 18px',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Delete Event
                 </button>
               )}
             </div>

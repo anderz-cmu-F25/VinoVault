@@ -4,6 +4,7 @@ const {
   getSocialEventById,
   joinSocialEvent,
   leaveSocialEvent,
+  deleteSocialEvent,
 } = require('./socialEvent.service')
 
 async function createEvent(req, res, next) {
@@ -92,10 +93,28 @@ async function leaveEvent(req, res, next) {
   }
 }
 
+async function deleteEvent(req, res, next) {
+  try {
+    const currentUserId = req.auth.userId
+    const eventId = req.params.eventId
+
+    if (!currentUserId) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+    await deleteSocialEvent(currentUserId, eventId)
+
+    return res.status(200).json({ message: 'Event deleted successfully' })
+  } catch (error) {
+    next(error)
+  }
+}
+
 module.exports = {
   createEvent,
   getEvents,
   getEventDetails,
   joinEvent,
   leaveEvent,
+  deleteEvent,
 }

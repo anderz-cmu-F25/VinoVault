@@ -1,4 +1,10 @@
-const { createEvent, findEventById, findAllEvents, saveEvent } = require('./socialEvent.repository')
+const {
+  createEvent,
+  findEventById,
+  findAllEvents,
+  saveEvent,
+  deleteEventById,
+} = require('./socialEvent.repository')
 const { createClerkClient } = require('@clerk/backend')
 
 const clerkClient = createClerkClient({
@@ -99,10 +105,25 @@ async function leaveSocialEvent(currentUserId, eventId) {
   return event
 }
 
+async function deleteSocialEvent(currentUserId, eventId) {
+  const event = await findEventById(eventId)
+
+  if (!event) {
+    throw new Error('Event not found.')
+  }
+
+  if (event.hostUserId !== currentUserId) {
+    throw new Error('Only the host can delete this event.')
+  }
+
+  await deleteEventById(eventId)
+}
+
 module.exports = {
   createSocialEvent,
   getAllSocialEvents,
   getSocialEventById,
   joinSocialEvent,
   leaveSocialEvent,
+  deleteSocialEvent,
 }
