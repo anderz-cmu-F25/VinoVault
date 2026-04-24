@@ -1,6 +1,6 @@
 import { X, Search, ImagePlus, Trash2 } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { DragEvent, ClipboardEvent } from 'react'
+import type { DragEvent } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
@@ -208,13 +208,6 @@ export function AddCellarEntryModal({
     e.preventDefault()
     setIsDragging(false)
     if (e.dataTransfer.files.length) addImages(e.dataTransfer.files)
-  }
-
-  function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
-    const items = Array.from(e.clipboardData.items).filter((i) => i.type.startsWith('image/'))
-    if (items.length === 0) return
-    const files = items.map((i) => i.getAsFile()).filter(Boolean) as File[]
-    addImages(files)
   }
 
   const searchResults =
@@ -604,10 +597,9 @@ export function AddCellarEntryModal({
               <div>
                 <label style={labelStyle}>Notes</label>
                 <textarea
-                  placeholder="Tasting notes, occasion, etc. — paste an image directly here."
+                  placeholder="Tasting notes, occasion, etc."
                   value={form.notes}
                   onChange={(e) => setField('notes', e.target.value)}
-                  onPaste={handlePaste}
                   rows={3}
                   style={{ ...inputStyle, resize: 'none' }}
                 />
@@ -679,7 +671,7 @@ export function AddCellarEntryModal({
                         margin: 0,
                       }}
                     >
-                      Drag & drop images here, or paste from clipboard
+                      Drag & drop images here
                     </p>
                   </div>
                 )}
